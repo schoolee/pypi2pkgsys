@@ -63,7 +63,7 @@ Portage specific options are:
  * --portage-distfiles: The directory where the portage to store its package files. The default value is /usr/portage/distfiles.
  * --portage-dir: The directory where the generated ebuild will be saved. The default value is /usr/local/portage/dev-python.
 
-=== Examples ===
+== Examples ==
 {{{
 pypi2portage setuptools docutils
 }}}
@@ -71,3 +71,10 @@ And then
 {{{
 emerge setuptools docutils
 }}}
+
+== Status ==
+
+pypi2pkgsys is in earily stage now, many features are still in development. And many
+packages are not checked yet. I shall add features and check PyPI packages step by step.
+Now pypi2portage is worked for me, and some of my required PyPI packages can be installed
+into my gentoo by using the automatically generated ebuilds.
