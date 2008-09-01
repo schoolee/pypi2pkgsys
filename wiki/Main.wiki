@@ -18,7 +18,8 @@ If we install PyPI packages by easy_install, so the distribution package managem
 installed by easy_install, the distribution package management tool will install it again.
 And usally, the packages provided by distribution are not updated frequently as the PyPI
 list. For example, Pylons in gentoo portage is 0.9.4.1, but the latest version provided
-in PyPI is 0.9.7rc1 now.
+in PyPI is 0.9.7rc1 now. Two or more versions of the same packages might be installed in
+this case. This problem mess my /usr/lib/python2.5/site-packages.
 
 So I want to generate package files from the PyPI list automatically. If we can install
 them automatically by easy_install, why we can not generate packages files from PyPI list?
@@ -26,7 +27,8 @@ them automatically by easy_install, why we can not generate packages files from 
 We shall benefit from all features provided by distribution package management tools if
 we generate package files from PyPI list and then install PyPI packages by distribution
 package management tools but not easy_install. In this way, we shall avoid dup-install,
-version conflict of the PyPI packages. And can get the latest packages easily.
+version conflict of the PyPI packages. And can get the latest packages easily in the same
+time.
 
 == Difficulties ==
 
@@ -50,7 +52,7 @@ For the widespread problem, such as using distutils but not setuptools, we can e
 pypi2pkgsys to make it more smart. And we shall not be distribbed by this problems again.
 
 For the package specific problem, we can define a patch to fix it. Or even mask it out
-and maintain it by hand. This will avoid to bring unnecessary complexity into pypi2pkgsys.
+and maintain it by hand. This will keep pypi2pkgsys from unnecessary complexity.
 
 == Usage ==
 
@@ -67,7 +69,7 @@ Portage specific options are:
 {{{
 pypi2portage setuptools docutils
 }}}
-And then
+The new generated ebuilds will be saved into /usr/local/portage/dev-python. And then
 {{{
 emerge setuptools docutils
 }}}
@@ -76,5 +78,5 @@ emerge setuptools docutils
 
 pypi2pkgsys is in earily stage now, many features are still in development. And many
 packages are not checked yet. I shall add features and check PyPI packages step by step.
-Now pypi2portage is worked for me, and some of my required PyPI packages can be installed
+Now pypi2portage is worked for me, and some of required PyPI packages can be installed
 into my gentoo by using the automatically generated ebuilds.
