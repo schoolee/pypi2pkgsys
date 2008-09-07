@@ -1,0 +1,10 @@
+#!/usr/bin/python
+# Author: Charles Wang <charlesw1234@163.com>
+
+import sys
+
+from pypi2pkgsys.pypi2packages import PYPI2Package
+from pypi2pkgsys.pkgsys_dpkg import PkgSysDPkg as PackageSystem
+
+packager = PYPI2Package(PackageSystem, sys.argv)
+packager.run()

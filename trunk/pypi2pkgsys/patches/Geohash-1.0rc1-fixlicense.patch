@@ -1,0 +1,11 @@
+--- setup.py.bk	2008-09-07 09:06:06.000000000 +0800
++++ setup.py	2008-09-07 09:06:36.000000000 +0800
+@@ -37,7 +37,7 @@
+     author_email = "leonard.norrgard@refactor.fi",
+     description = "Module to decode/encode Geohashes to/from latitude and longitude.  See http://en.wikipedia.org/wiki/Geohash",
+     long_description = "This module provides functions to decode and encode Geohashes to and from latitude and longitude coordinates.",
+-    license = "GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.",
++    license = "GPL-3",
+     keywords = "Geohash GIS latitude longitude encode decode Galileo GPS WGS84 coordinates geotagging",
+     url = "http://www.refactor.fi/software/gis/geohash/",   # project home page, if any
+     download_url = "http://www.refactor.fi/software/gis/geohash/Geohash-1.0rc1.tar.gz"

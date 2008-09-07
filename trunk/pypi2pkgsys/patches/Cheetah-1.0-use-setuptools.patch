@@ -1,0 +1,11 @@
+--- SetupTools.py.orig	2008-08-31 20:57:01.000000000 +0800
++++ SetupTools.py	2008-08-31 20:57:17.000000000 +0800
+@@ -13,7 +13,7 @@
+ ##################################################
+ ## DEPENDENCIES ##
+ 
+-from distutils.core import setup
++from setuptools import setup
+ ## this bit is experimental:
+ #try:
+ #    # use http://peak.telecommunity.com/DevCenter/setuptools if it's installed
