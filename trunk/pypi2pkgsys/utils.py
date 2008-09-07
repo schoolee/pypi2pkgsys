@@ -71,7 +71,7 @@ def smart_archive(dist, unpackdir):
         firstlist = map(lambda zfn: first_dir(zfn), zf.namelist())
         zf.close()
     else:
-        raise RuntimeError, 'Unrecognized format package file: %s' % dist.location
+        return False, {}
     if firstlist == [firstlist[0]] *  len(firstlist):
         cfgmap['pkgdir'] = firstlist[0]
         cfgmap['unpackpath'] = os.path.join(unpackdir, cfgmap['pkgdir'])
@@ -81,4 +81,4 @@ def smart_archive(dist, unpackdir):
         else: cfgmap['pkgdir'] = '%s-%s' % (dist.project_name, dist.version)
         cfgmap['unpackpath'] = os.path.join(unpackdir, cfgmap['pkgdir'])
         unpack_archive(dist.location, cfgmap['unpackpath'])
-    return cfgmap
+    return True, cfgmap
