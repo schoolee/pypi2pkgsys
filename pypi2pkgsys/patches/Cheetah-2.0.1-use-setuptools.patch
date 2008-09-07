@@ -1,0 +1,11 @@
+--- SetupTools.py.orig	2008-08-31 21:00:53.000000000 +0800
++++ SetupTools.py	2008-08-31 21:01:17.000000000 +0800
+@@ -19,7 +19,7 @@
+ import string
+ import traceback
+ 
+-from distutils.core import setup
++from setuptools import setup
+ if 'CHEETAH_USE_SETUPTOOLS' in os.environ:
+     # @@TR: Please note that this is for testing purposes only!  PEAK setuptools
+     # is not required or recommended for installing Cheetah.  Downstream

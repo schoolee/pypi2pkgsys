@@ -1,0 +1,29 @@
+--- setup.py.orig	2008-09-03 23:15:43.000000000 +0800
++++ setup.py	2008-09-03 23:16:32.000000000 +0800
+@@ -1,6 +1,6 @@
+ # -*- coding: utf-8 -*-
+ 
+-# Copyright © 2006 Steven J. Bethard <steven.berthard@gmail.com>.
++# Copyright ? 2006 Steven J. Bethard <steven.berthard@gmail.com>.
+ #
+ # Redistribution and use in source and binary forms, with or without
+ # modification, are permitted under the terms of the 3-clause BSD
+@@ -8,9 +8,9 @@
+ # For details, see the accompanying file LICENSE.txt.
+ 
+ import textwrap
+-import distutils.core
++from setuptools import setup
+ 
+-distutils.core.setup(
++setup(
+     name='argparse',
+     version='0.8.0',
+     author='Steven Bethard',
+@@ -35,4 +35,4 @@
+         'Topic :: Software Development',
+     ],
+     py_modules=['argparse'],
+-)
+\ No newline at end of file
++)

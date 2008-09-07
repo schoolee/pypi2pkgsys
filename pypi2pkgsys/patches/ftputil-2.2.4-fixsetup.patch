@@ -1,0 +1,28 @@
+--- setup.py.bk	2008-09-07 00:31:11.000000000 +0800
++++ setup.py	2008-09-07 00:32:10.000000000 +0800
+@@ -41,14 +41,14 @@
+ 
+ from distutils import core
+ from distutils import sysconfig
+-
++from setuptools import setup
+ 
+ _name = "ftputil"
+ _package = "ftputil"
+ _version = open("VERSION").read().strip()
+ _data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
+ 
+-core.setup(
++setup(
+   # installation data
+   name=_name,
+   version=_version,
+@@ -62,7 +62,7 @@
+   url="http://ftputil.sschwarzer.net/",
+   description="High-level FTP client library (virtual filesystem and more)",
+   keywords="FTP, client, virtual file system",
+-  license="Open source (revised BSD license)",
++  license="BSD",
+   platforms=["Pure Python (Python version >= 2.3)"],
+   long_description="""\
+ ftputil is a high-level FTP client library for the Python programming

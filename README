@@ -1,0 +1,21 @@
+I write this package because the python modules installed by easy_install
+are not known by distribution package system.
+
+I'm a gentoo user, its portage is not updated for PyPI python modules. If I
+install these module by easy_install, emerge do not know it. When other package
+which is not located in PyPI require PyPI modules, emerge will install them
+again. Usally with different version, so my /usr/lib/python2.5/site-packages
+become a mess.
+
+So I think if all packages are installed by emerge, we can avoid the previous
+problem. We can generate ebuild automatically if we can install PyPI modules
+by easy_install automatically.
+
+After some work, I found there are some PyPI module which is not standardized
+enough, and the ebuild on hand do some hack on it. I think the better way is
+to patch the original PyPI module to let it standardized.
+
+pypi2pkgsys is in early stage because there are some many packages in PyPI
+index. I shall update it step by step.
+
+Charles Wang <charlesw1234@163.com>

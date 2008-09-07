@@ -1,0 +1,11 @@
+--- setup.py.bk	2008-09-06 23:57:46.000000000 +0800
++++ setup.py	2008-09-06 23:58:01.000000000 +0800
+@@ -3,7 +3,7 @@
+ # $Id: setup.py,v 1.1 2005/08/29 22:04:55 lastcraft Exp $
+ 
+ 
+-from distutils.core import *
++from setuptools import setup
+ 
+ 
+ setup(name="fakemail-python",

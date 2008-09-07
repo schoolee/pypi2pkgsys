@@ -1,0 +1,31 @@
+--- setuptools/package_index.py~	2007-09-05 00:18:45.000000000 +0800
++++ setuptools/package_index.py	2008-08-31 13:25:42.000000000 +0800
+@@ -585,6 +585,17 @@
+                 raise DistutilsError("Download error for %s: %s"
+                                      % (url, v.reason))
+ 
++    def _check_exists(self, url, filename):
++        if not os.path.isfile(filename): return False
++        if '#' not in url: return False
++        info = url.split('#')[1]
++        if not re.match('md5=[0-9a-f]{32}$', info): return False
++        cs = md5()
++        f = file(filename)
++        cs.update(f.read())
++        f.close()
++        return cs.hexdigest() == info[4:]
++
+     def _download_url(self, scheme, url, tmpdir):
+         # Determine download filename
+         #
+@@ -603,7 +614,9 @@
+ 
+         # Download the file
+         #
+-        if scheme=='svn' or scheme.startswith('svn+'):
++        if self._check_exists(url, filename):
++            return filename
++        elif scheme=='svn' or scheme.startswith('svn+'):
+             return self._download_svn(url, filename)
+         elif scheme=='file':
+             return urllib2.url2pathname(urlparse.urlparse(url)[2])
