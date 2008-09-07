@@ -1,0 +1,26 @@
+# news page of pypi2pkgsys
+
+= News of pypi2pkgsys =
+
+== September 7, 2008 ==
+
+Now I'm working on the first scan of all PyPI packages. Of course there are
+many packages in its list, more than 4000. And some packages are not released
+in the standard way, so I have to cut them off now.
+
+For example, some packages have only one python module file, and some packages
+are built and installed with autoconf/automake/make. They need some other style
+ebuild for them.
+
+And there is not any download links in the package index for some packages,
+I have to mask them too.
+
+Now the check of  the packages which started with 'A', 'a', 'B', 'b', 'C', 'c',
+'D', 'd', 'E', 'e', 'F', 'f', 'G'. 'g', 'H' have been done. I shall go on
+in these days. 
+
+Now the pypi2pkgsys is stronger than the previous version. I believe after the
+first scan of the PyPI, pypi2pkgsys will be usable for more than half of the
+all packages in PyPI.
+
+The version will be changed to '0.1.0' after this fisrt scan.
