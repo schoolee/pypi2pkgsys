@@ -1,0 +1,10 @@
+--- setup.py.bk	2008-09-07 16:19:30.000000000 +0800
++++ setup.py	2008-09-07 16:19:40.000000000 +0800
+@@ -21,6 +21,7 @@
+ 
+ import os
+ import sys
++import setuptools
+ from configutils import Extension, setup, config, build_ext, using_setuptools
+ 
+ # List of source files
