@@ -6,6 +6,7 @@ import os.path
 import popen2
 import shutil
 import string
+import sys
 
 from ConfigParser import ConfigParser
 from distutils.errors import DistutilsError
@@ -92,11 +93,13 @@ class PYPI2Package(object):
                                                              source = True),
                                parse_requirements([pkg]))[0]
                 except DistutilsError:
-                    logfile.write('%s = %s\n' % (pkgname, sys.exc_info()[1]))
+                    exc_value = sys.exc_info()[1]
+                    print 'Download %s failed: %s!' % (pkgname, exc_value)
+                    logfile.write('%s = %s\n' % (pkgname, exc_value))
                     logfile.flush()
                     continue
                 if dist is None:
-                    print 'Download %s failed!' % pkg
+                    print 'Download %s failed!' % pkgname
                     logfile.write('%s = No downloads.\n' % pkgname)
                     logfile.flush()
                     continue
@@ -122,7 +125,13 @@ class PYPI2Package(object):
                     print 'Applying %s' % p
                     os.system('(cd %s; patch -p0 < %s)' % \
                                   (unpackpath, os.path.join(patchdir, p)))
-                self._setup_convert(os.path.join(unpackpath, 'setup.py'))
+                setup_path = os.path.join(unpackpath, 'setup.py')
+                if not os.path.isfile(setup_path):
+                    print '%s: No setup.py at all' % pkgname
+                    logfile.write('%s = No setup.py at all.\n' % pkgname)
+                    logfile.flush()
+                    continue
+                self._setup_convert(setup_path)
 
                 print 'Get distribution args from %s' % unpackpath
                 p = popen2.popen2(popen_fmt % unpackpath)
