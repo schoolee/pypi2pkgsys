@@ -105,7 +105,13 @@ class PYPI2Package(object):
                     continue
 
                 print 'Unpacking ...', pkg
-                cfgmap = smart_archive(dist, unpackdir)
+                ok_ornot, cfgmap = smart_archive(dist, unpackdir)
+                if not ok_ornot:
+                    print 'Unrecognized archive format: %s' % dist.location
+                    logfile.write("%s = Unrecognized archive format: %s\n" % \
+                                      (pkgname, dist.location))
+                    logfile.flush()
+                    continue
                 unpackpath = cfgmap['unpackpath']
 
                 # Prepare parameters.
