@@ -55,6 +55,7 @@ src_install() {
 licenselist = []
 licenselist.append(('Academic Free License version 3.0', 'AFL-3.0'))
 licenselist.append(('Apache 2.0', 'Apache-2.0'))
+licenselist.append(('Attribution Assurance License', ''))
 licenselist.append(('public domain', 'public-domain'))
 licenselist.append(('Public Domain', 'public-domain'))
 licenselist.append(('GNU General Public License, version 3 or later', 'GPL-3'))
@@ -88,6 +89,7 @@ licenses['lgpl2'] = 'LGPL-2'
 licenses['lgpl 2.1 or later'] = 'LGPL-2.1'
 licenses['mit-style'] = 'MIT'
 licenses['mit/x'] = 'MIT X11'
+licenses['x11/mit'] = 'X11 MIT'
 licenses['psf'] = 'PSF'
 licenses['zlib/libpng'] = 'ZLIB'
 licenses['zpl2.1'] = 'ZPL'
@@ -187,9 +189,12 @@ class PkgSysPortage(PackageSystem):
             pylicense = cut_parentheses(pylicense)
             for lic in licenselist:
                 pylicense = pylicense.replace(lic[0], lic[1])
-            
+            if pylicense == '': return 'UNKNOWN'
             if pylicense.find(',') >= 0:
-                lclist = map(lambda lc: lc.strip(), pylicense.split(','))
+                lclist = []
+                for part in pylicense.split(','):
+                    part = part.strip()
+                    lclist.extend(part.split())
             else:
                 lclist = pylicense.split()
             reslclist = []
