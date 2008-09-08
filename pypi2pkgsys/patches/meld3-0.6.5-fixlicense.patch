@@ -1,0 +1,11 @@
+--- setup.py.bk	2008-09-09 06:51:20.000000000 +0800
++++ setup.py	2008-09-09 06:51:44.000000000 +0800
+@@ -16,7 +16,7 @@
+     description = 'meld3 is an HTML/XML templating engine.',
+     author = 'Chris McDonough',
+     author_email =  'chrism@plope.com',
+-    license='see LICENSE.txt',
++    license='ZPL',
+     packages=['meld3'],
+     url='http://www.plope.com/software/meld3/',
+     ext_modules=ext_modules,
