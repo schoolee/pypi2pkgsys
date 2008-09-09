@@ -56,6 +56,7 @@ licenselist = []
 licenselist.append(('Academic Free License version 3.0', 'AFL-3.0'))
 licenselist.append(('Apache 2.0', 'Apache-2.0'))
 licenselist.append(('Attribution Assurance License', ''))
+licenselist.append(('Common Public License version 1.0', 'CPL-1.0'))
 licenselist.append(('public domain', 'public-domain'))
 licenselist.append(('Public Domain', 'public-domain'))
 licenselist.append(('GNU General Public License, version 3 or later', 'GPL-3'))
@@ -91,6 +92,7 @@ licenses['lgpl2'] = 'LGPL-2'
 licenses['lgpl 2.1 or later'] = 'LGPL-2.1'
 licenses['mit-style'] = 'MIT'
 licenses['mit/x'] = 'MIT X11'
+licenses['python-like'] = 'PYTHON'
 licenses['wxwindows'] = 'wxWinLL-3'
 licenses['x11/mit'] = 'X11 MIT'
 licenses['psf'] = 'PSF'
