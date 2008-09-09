@@ -713,7 +713,6 @@ Twisted = MD5 validation failed for Twisted-8.1.0.tar.bz2; possible download pro
 wxPython = No downloads.
 Xapwrap = Import epsilon, failed in setup.py
 XmlTestRunner = No downloads.
-X = No downloads.
 XRCWidgets = Import wx, failed in setup.py
 XTemplate4Python = Unexpected HTML page found at http://pyhacks.suddenthinks.com/misc/XTemplate4Python-0.1.0.tar.gz
 YABT = Unknown license: RPL.
