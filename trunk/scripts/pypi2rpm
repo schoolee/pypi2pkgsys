@@ -1,10 +1,12 @@
 #!/usr/bin/python
-# Author: Charles Wang <charlesw1234@163.com>
+# Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: BSD
 
 import sys
 
 from pypi2pkgsys.pypi2packages import PYPI2Package
-from pypi2pkgsys.pkgsys_rpm import PkgSysRPM as PackageSystem
+from pypi2pkgsys.rpm import PkgSysRPM as PackageSystem
 
 packager = PYPI2Package(PackageSystem, sys.argv)
 packager.run()
