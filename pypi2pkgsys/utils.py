@@ -1,12 +1,10 @@
-# Copyright (C) 2008, Charles Wang <charlesw1234@163.com>
-# Author: Charles Wang <charlesw1234@163.com>
+# Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: BSD
 
 import filecmp
 import os
 import os.path
-import tarfile
-import zipfile
-from setuptools.archive_util import unpack_archive
 
 def ensure_dir(dir):
     if not os.path.isdir(dir): os.makedirs(dir)
@@ -45,40 +43,8 @@ def cut_parentheses(value):
         elif lvl == 0: retvalue = retvalue + ch
     return retvalue
 
-def digit_extract(value):
-    retvalue = ''
-    for v in value:
-        if v in '0123456789': retvalue = retvalue + v
-        elif retvalue == '': continue # We need not start from scratch.
-        else: break # We need not any separated digits.
-    return retvalue
-
 def first_dir(path):
     while True:
         path, fname = os.path.split(path)
         if path == '': return fname
         elif path == '/': return os.path.join('/', fname)
-
-def smart_archive(dist, unpackdir):
-    cfgmap = { 'pkgpath' : dist.location,
-               'pkgfile' : os.path.basename(dist.location) }
-    if tarfile.is_tarfile(dist.location):
-        tf = tarfile.open(dist.location, 'r:*')
-        firstlist = map(lambda tfi: first_dir(tfi.name), tf.getmembers())
-        tf.close()
-    elif zipfile.is_zipfile(dist.location):
-        zf = zipfile.ZipFile(dist.location)
-        firstlist = map(lambda zfn: first_dir(zfn), zf.namelist())
-        zf.close()
-    else:
-        return False, {}
-    if firstlist == [firstlist[0]] *  len(firstlist):
-        cfgmap['pkgdir'] = firstlist[0]
-        cfgmap['unpackpath'] = os.path.join(unpackdir, cfgmap['pkgdir'])
-        unpack_archive(dist.location, unpackdir)
-    else:
-        if dist.version == '': cfgmap['pkgdir'] = dist.project_name
-        else: cfgmap['pkgdir'] = '%s-%s' % (dist.project_name, dist.version)
-        cfgmap['unpackpath'] = os.path.join(unpackdir, cfgmap['pkgdir'])
-        unpack_archive(dist.location, cfgmap['unpackpath'])
-    return True, cfgmap
