@@ -28,7 +28,8 @@ dpkg for dpkg-base distribution will be added in future.
       package_data = { 'pypi2pkgsys' : \
                            [os.path.join('patches', 'index.ini'),
                             os.path.join('patches', 'broken.txt'),
-                            os.path.join('patches', '*.patch')] },
+                            os.path.join('patches', '*.patch'),
+                            os.path.join('portage', '*.tmpl')] },
       zip_safe = False,
       install_requires = ['setuptools>=0.6c8'],
       classifiers = ['Development Status :: 3 - Alpha',
