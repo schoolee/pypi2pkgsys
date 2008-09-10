@@ -10,7 +10,7 @@ class PackageSystem(object):
     def FinalizeOptions(self, options):
         raise RuntimeError, 'It has to be overridden.'
 
-    def GenPackage(self, args, options, cfgmap):
+    def GenPackage(self, pkgtype, args, options, cfgmap):
         raise RuntimeError, 'It has to be overridden.'
 
     def PostGenerate(self, name, version):

@@ -22,13 +22,20 @@ ln = broken_file.readline()
 while ln:
     name, value = ln.split('=', 1)
     name = name.strip(); value = value.strip()
-    masked[name] = value
+    broken[name] = value
     ln = broken_file.readline()
 broken_file.close()
 del(broken_file)
+del(ln)
 
 def check_broken(pkgname):
     if pkgname in broken: raise RuntimeError, broken[pkgname]
+
+def first_dir(path):
+    while True:
+        path, fname = os.path.split(path)
+        if path == '': return fname
+        elif path == '/': return os.path.join('/', fname)
 
 def smart_archive(dist, unpackdir):
     cfgmap = { 'pkgpath' : dist.location,
@@ -78,7 +85,7 @@ def fix_setup(unpackpath):
             line = line.replace('core.setup', 'setuptools.setup')
         elif len(lnsplit) >= 4 and lnsplit[0] == 'from' and \
                 lnsplit[1] == 'distutils.core' and lnsplit[2] == 'import' \
-                and 'setup' in ln:
+                and 'setup' in line:
             # from distutils.core import setup
             modified = True
             line = line.replace('distutils.core', 'setuptools')
@@ -86,7 +93,7 @@ def fix_setup(unpackpath):
     if modified or add_import:
         setup_fp = file(setup_path, 'w')
         if add_import: setup.fp.write('import setuptools\n')
-        setup_fp.write(output)
+        setup_fp.write(''.join(reslinearr))
         setup_fp.close()
 
 popen_fmt = '(cd %s; python setup.py dump)'

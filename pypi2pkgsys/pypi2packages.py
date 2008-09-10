@@ -136,26 +136,27 @@ class PYPI2Package(object):
                     except:
                         exc_value = sys.exc_info()[1]
                         print 'Dump %s failed: %s.' % (pkgname, exc_value)
-                        logfp.write('%s = Dump args failed: %s.' % \
+                        logfp.write('%s = Dump args failed: %s\n' % \
                                         (pkgname, exc_value))
                         logfp.flush()
                         continue
                 else:
                     print '%s: Unsupported package type.' % pkgname
-                    logfp.write('%s = Unsupport package type.' % pkgname)
+                    logfp.write('%s = Unsupport package type.\n' % pkgname)
                     logfp.flush()
                     continue
 
-                args = fix_args(pkgname, args, pkg2license)
+                args = fix_args(pkgname, args)
 
                 # Generate package from args and options.
                 try:
                     updated, deps = \
-                        self.pkgsys.GenPackage(args, self.options, cfgmap)
+                        self.pkgsys.GenPackage(pkgtype, args, self.options,
+                                               cfgmap)
                 except:
                     exc_value = sys.exc_info()[1]
                     print '%s: GenPackage failed: %s' % (pkgname, exc_value)
-                    logfp.write('%s = GenPackage failed: %s' %\
+                    logfp.write('%s = GenPackage failed: %s\n' %\
                                     (pkgname, exc_value))
                     logfp.flush()
                     deps = []
