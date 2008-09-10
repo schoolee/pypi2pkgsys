@@ -149,8 +149,16 @@ class PYPI2Package(object):
                 args = fix_args(pkgname, args, pkg2license)
 
                 # Generate package from args and options.
-                updated, deps = \
-                    self.pkgsys.GenPackage(args, self.options, cfgmap)
+                try:
+                    updated, deps = \
+                        self.pkgsys.GenPackage(args, self.options, cfgmap)
+                except:
+                    exc_value = sys.exc_info()[1]
+                    print '%s: GenPackage failed: %s' % (pkgname, exc_value)
+                    logfp.write('%s = GenPackage failed: %s' %\
+                                    (pkgname, exc_value))
+                    logfp.flush()
+                    deps = []
                 new_packages = uniq_extend(new_packages, deps)
 
             # Process all required but not processed packages.
