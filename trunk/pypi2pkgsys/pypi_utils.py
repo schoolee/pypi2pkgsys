@@ -9,12 +9,23 @@ import tarfile
 import zipfile
 from setuptools.archive_util import unpack_archive
 
-from pypi2pkgsys import patchdir, config
+from pypi2pkgsys import patchdir
 
 pkg2license = {}
-if config.has_section('pkg2license'):
-    for name, value in config.items('pkg2license'):
-        pkg2license[name] = value
+pkg2license['Adaptation'] = 'UNKNOWN'
+pkg2license['brian'] = 'CeCILL-2'
+pkg2license['config'] = 'UNKNOWN'
+pkg2license['dbmigrate'] = 'BSD'
+pkg2license['Durus'] = 'CNRI'
+pkg2license['encutils'] = 'LGPL-3'
+pkg2license['ftputil'] = 'BSD'
+pkg2license['fui'] = 'GPL-3'
+pkg2license['Geohash'] = 'GPL-3'
+pkg2license['logging'] = 'MIT'
+pkg2license['meld'] = 'ZPL'
+pkg2license['qpy'] = 'BSD'
+pkg2license['Quixote'] = 'CNRI-QUIXOTE-2.4'
+pkg2license['pytz'] = 'MIT'
 
 broken = {}
 broken_file = file(os.path.join(patchdir, 'broken.txt'))
@@ -74,15 +85,18 @@ def fix_setup(unpackpath):
     reslinearr = []
     for line in linearr:
         lnsplit = line.split()
-        if 'distutils.core.setup' in line:
+        # ( have to be added to avoid convert setup_xxx.
+        # FIX ME: If somebody add spaces between distutils.core.setup and (, ...
+        if 'distutils.core.setup(' in line:
             #import distutils ... distutils.core.setup
             add_import = True
-            line = line.replace('distutils.core.setup',
-                                'setuptools.setup')
-        elif 'core.setup' in line:
+            line = line.replace('distutils.core.setup(',
+                                'setuptools.setup(')
+        # FIX ME: If somebody add spaces between core.setup and (, ...
+        elif 'core.setup(' in line:
             #from distutils import core ... core.setup
             add_import = True
-            line = line.replace('core.setup', 'setuptools.setup')
+            line = line.replace('core.setup(', 'setuptools.setup(')
         elif len(lnsplit) >= 4 and lnsplit[0] == 'from' and \
                 lnsplit[1] == 'distutils.core' and lnsplit[2] == 'import' \
                 and 'setup' in line:
@@ -92,7 +106,7 @@ def fix_setup(unpackpath):
         reslinearr.append(line)
     if modified or add_import:
         setup_fp = file(setup_path, 'w')
-        if add_import: setup.fp.write('import setuptools\n')
+        if add_import: setup_fp.write('import setuptools\n')
         setup_fp.write(''.join(reslinearr))
         setup_fp.close()
 

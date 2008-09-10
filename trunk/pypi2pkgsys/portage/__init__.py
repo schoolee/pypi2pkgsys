@@ -6,12 +6,10 @@ import os.path
 import string
 import sys
 
-from pypi2pkgsys import pkgroot
+from pypi2pkgsys import pkgroot, patchdir
 from pypi2pkgsys.PackageSystem import PackageSystem
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.portage.utils import *
-
-pypi_dir = 'dev-python'
 
 class PkgSysPortage(PackageSystem):
     def __init__(self):
@@ -52,8 +50,7 @@ class PkgSysPortage(PackageSystem):
         iuse_arr = ['doc'] + args['extras_require'].keys()
         eb_args['iuse'] = string.join(iuse_arr)
 
-        rdepend = map(lambda dep: DepConvert(dep),
-                      args['install_requires'])
+        rdepend = map(lambda dep: DepConvert(dep), args['install_requires'])
         eb_args['rdepend'] = string.join(rdepend, '\n\t')
 
         ereq = {}
@@ -102,8 +99,7 @@ class PkgSysPortage(PackageSystem):
             ebuild_dir_files = os.path.join(ebuild_dir, 'files')
             ensure_dir(ebuild_dir_files)
             for p in cfgmap['patches']:
-                if smart_symlink(os.path.join(os.path.dirname(__file__),
-                                              'patches', p),
+                if smart_symlink(os.path.join(patchdir, p),
                                  os.path.join(ebuild_dir_files, p)):
                     updated = True
 

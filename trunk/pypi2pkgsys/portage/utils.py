@@ -7,6 +7,8 @@ import os.path
 import string
 from pypi2pkgsys.utils import cut_parentheses
 
+pypi_dir = 'dev-python'
+
 def NameConvert(pyname):
     return pyname.lower()
 
