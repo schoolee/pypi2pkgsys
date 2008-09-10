@@ -1,29 +1,16 @@
-# Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
-# Author: Charles Wang <charlesw123456@gmail.com>
-# License: BSD
+# Copyright (C) 2008, Charles Wang <charlesw1234@163.com>
+# Author: Charles Wang <charlesw1234@163.com>
 
 import glob
 import os.path
 import string
 import sys
 
-from pypi2pkgsys import pkgroot, patchdir, config
 from pypi2pkgsys.PackageSystem import PackageSystem
 from pypi2pkgsys.utils import *
+from pypi2pkgsys.portage.utils import *
 
 pypi_dir = 'dev-python'
-
-masked = {}
-if config.has_section('portage-broken'):
-    for name, value in config.items('portage-broken'):
-        assert name not in masked
-        masked[name] = value
-
-version_map = {}
-if config.has_option('portage', 'version-map'):
-    for v in config.get('portage', 'version-map').split():
-        name, value = v.split(':')
-        version_map[name] = value
 
 class PkgSysPortage(PackageSystem):
     def __init__(self):
@@ -41,87 +28,6 @@ class PkgSysPortage(PackageSystem):
         return options
 
     def GenPackage(self, args, options, cfgmap):
-        def NameConvert(pyname):
-            return pyname.lower()
-        def VersionConvert(pyname, pyversion):
-            if pyversion == '': return pyversion
-            fullname = '%s-%s' % (pyname, pyversion)
-            if fullname in version_map: return version_map[fullname]
-            ver = ''
-            while pyversion != '':
-                if pyversion[0].isdigit() or pyversion[0] == '.':
-                    ver = ver + pyversion[0]
-                    pyversion = pyversion[1:]
-                else:
-                    break
-            if ver != '' and ver[-1] == '.': ver = ver[:-1]
-            if pyversion != '':
-                while pyversion[0] == '_' or pyversion[0] == '-':
-                    pyversion = pyversion[1:]
-                if 'alpha' in pyversion:
-                    ver = ver + '_alpha' + digit_extract(pyversion)
-                elif 'beta' in pyversion:
-                    ver = ver + '_beta' + digit_extract(pyversion)
-                elif 'patch' in pyversion:
-                    ver = ver + '_p' + digit_extract(pyversion)
-                elif 'preview' in pyversion or 'pre' in pyversion:
-                    ver = ver + '_pre' + digit_extract(pyversion)
-                elif 'rc' in pyversion:
-                    ver = ver + '_rc' + digit_extract(pyversion)
-                elif 'dev' in pyversion:
-                    ver = ver + '_pre' + digit_extract(pyversion)
-                elif 'a' in pyversion:
-                    ver = ver + '_alpha' + digit_extract(pyversion)
-                elif 'b' in pyversion:
-                    ver = ver + '_beta' + digit_extract(pyversion)
-                elif 'p' in pyversion:
-                    ver = ver + '_p' + digit_extract(pyversion)
-                elif 'r' in pyversion or 'c' in pyversion:
-                    ver = ver + '_rc' + digit_extract(pyversion)
-                else:
-                    ver = ver + '_p' + digit_extract(pyversion)
-            return ver
-        def MakeFullname(pyname, pyversion):
-            if pyversion == '': return pyname
-            else: return '%s-%s' % (pyname, pyversion)
-        def DepConvert(pydep):
-            if '>=' not in pydep:
-                return '%s/%s' % (pypi_dir, NameConvert(pydep))
-            idx = pydep.index('>=')
-            name = pydep[:idx].strip(); version = pydep[idx + 2:].strip()
-            return '>=%s/%s' % (pypi_dir,
-                                MakeFullname(NameConvert(name),
-                                             VersionConvert(name, version)))
-        def LicenseConvert(pyname, pylicense):
-            # It is a really dirty work.
-            if pyname in licenses: return licenses[pyname]
-            pylicense_bk = pylicense
-            pylicense = cut_parentheses(pylicense)
-            for lic in licenselist:
-                pylicense = pylicense.replace(lic[0], lic[1])
-            if pylicense == '': return 'UNKNOWN'
-            if pylicense.find(',') >= 0:
-                lclist = []
-                for part in pylicense.split(','):
-                    part = part.strip()
-                    lclist.extend(part.split())
-            else:
-                lclist = pylicense.split()
-            reslclist = []
-            for lc in lclist:
-                lc = lc.lower()
-                if lc in licenses:  reslclist.append(licenses[lc])
-            if reslclist == []:
-                # May be we have to enhance this function.
-                raise RuntimeError, 'Unrecognized license: %s' % pylicense_bk
-            return string.join(reslclist)
-
-        # Check acceptance.
-        if args['name'] in masked:
-            print '%r is not accepted: %r.' % (args['name'],
-                                               masked[args['name']])
-            return (False, [])
-
         # Setup eb_args.
         eb_args = {}
         eb_args['self'] = sys.argv[0]
@@ -168,8 +74,7 @@ class PkgSysPortage(PackageSystem):
                             cfgmap['patches']), '\n\t')
 
         # Setup ebuild.
-        fullname = MakeFullname(NameConvert(args['name']),
-                                VersionConvert(args['name'], args['version']))
+        fullname = MakeFullname(args['name'], args['version'])
         if 'rev' not in cfgmap:
             ebuild_fn = '%s.ebuild' % fullname
         else:
@@ -194,7 +99,7 @@ class PkgSysPortage(PackageSystem):
                                               'patches', p),
                                  os.path.join(ebuild_dir_files, p)):
                     updated = True
-        
+
         # Call ebuild ... digest
         os.system('ebuild %s digest' % (ebuild_path))
 
@@ -204,3 +109,4 @@ class PkgSysPortage(PackageSystem):
             for k in args['extras_require'].keys():
                 deps = uniq_extend(deps, args['extras_require'][k])
         return (updated, deps)
+
