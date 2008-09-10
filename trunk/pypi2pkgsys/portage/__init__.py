@@ -6,6 +6,7 @@ import os.path
 import string
 import sys
 
+from pypi2pkgsys import pkgroot
 from pypi2pkgsys.PackageSystem import PackageSystem
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.portage.utils import *
@@ -27,7 +28,7 @@ class PkgSysPortage(PackageSystem):
             ['--portage-distfiles', '--portage-dir'])
         return options
 
-    def GenPackage(self, args, options, cfgmap):
+    def GenPackage(self, pkgtype, args, options, cfgmap):
         # Setup eb_args.
         eb_args = {}
         eb_args['self'] = sys.argv[0]
@@ -85,6 +86,12 @@ class PkgSysPortage(PackageSystem):
         ebuild_path = os.path.join(ebuild_dir, ebuild_fn)
         updated = False
         print 'Writing %s' % ebuild_path
+        if pkgtype == 'setup.py':
+            tmplf = file(os.path.join(pkgroot, 'portage', 'setup_py.tmpl'))
+        else:
+            raise RuntimeError, 'Unsupport package type: %s' % pkgtype
+        ebuild_format = tmplf.read()
+        tmplf.close()
         if smart_write(ebuild_path, ebuild_format % eb_args):
             updated = True
         if smart_symlink(cfgmap['pkgpath'],

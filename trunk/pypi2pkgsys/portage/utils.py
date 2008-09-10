@@ -2,6 +2,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: BSD
 
+import glob
+import os.path
 import string
 from pypi2pkgsys.utils import cut_parentheses
 
@@ -68,8 +70,8 @@ fullmap['attribution assurance license'] = 'UNKNOWN',
 fullmap['common public license version 1.0'] = 'CPL-1.0'
 fullmap['public domain'] = 'public-domain'
 fullmap['gnu general public license, version 3 or later'] = 'GPL-3'
-fullmap['general Public licence'] = 'GPL'
-fullmap['general Public license'] = 'GPL'
+fullmap['general public licence'] = 'GPL'
+fullmap['general public license'] = 'GPL'
 fullmap['open software license'] = 'OSL-2.0'
 fullmap['zope public license'] = 'ZPL'
 fullmap['http://www.apache.org/licenses/license-2.0'] = 'Apache-2.0'
@@ -113,7 +115,7 @@ partmap['psf'] = 'PSF'
 partmap['zlib/libpng'] = 'ZLIB'
 partmap['zpl2.1'] = 'ZPL'
 
-portage_license = { 'unknown' : 'UNKNOWN' }
+portage_licenses = { 'unknown' : 'UNKNOWN' }
 for pl in glob.glob('/usr/portage/licenses/*'):
     pl = os.path.basename(pl)
     pl_lower = pl.lower()
@@ -130,7 +132,8 @@ def LicenseConvert(pkgname, pkglicense):
     reslicense = []
     for pl in res:
         pl = pl.lower()
-        if pl in partmap and pl: reslicense.append(partmap[pl])
+        if pl in portage_licenses: reslicense.append(portage_licenses[pl])
+        elif pl in partmap: reslicense.append(partmap[pl])
     if reslicense == []:
         raise RuntimeError, 'Unrecognized license: %s' % pkglicense_bk
     return string.join(reslicense)

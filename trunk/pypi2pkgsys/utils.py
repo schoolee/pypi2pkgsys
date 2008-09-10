@@ -42,9 +42,3 @@ def cut_parentheses(value):
         elif ch == ')': lvl = lvl - 1
         elif lvl == 0: retvalue = retvalue + ch
     return retvalue
-
-def first_dir(path):
-    while True:
-        path, fname = os.path.split(path)
-        if path == '': return fname
-        elif path == '/': return os.path.join('/', fname)
