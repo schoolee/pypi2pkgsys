@@ -16,23 +16,23 @@ IUSE="%(iuse)s"
 
 RDEPEND="%(rdepend)s"
 DEPEND="${RDEPEND}
-\t%(depend)s"
+	%(depend)s"
 
 S=${WORKDIR}/${MY_PD}
 
 src_unpack() {
-\tdistutils_src_unpack
-\t%(patchlist)s
+	distutils_src_unpack
+	%(patchlist)s
 }
 
 src_compile() {
-\tdistutils_src_compile
-\tif use doc ; then
-\t\tPYTHONPATH=. "${python}" setup.py pudge || die "generating doc failed."
-\tfi
+	distutils_src_compile
+	if use doc ; then
+		PYTHONPATH=. "${python}" setup.py pudge || die "generating doc failed."
+	fi
 }
 
 src_install() {
-\tdistutils_src_install
-\tuse doc && dohtml -r docs/html/*
+	distutils_src_install
+	use doc && dohtml -r docs/html/*
 }
