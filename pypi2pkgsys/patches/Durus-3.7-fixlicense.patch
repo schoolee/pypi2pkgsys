@@ -1,9 +1,0 @@
---- setup.py.orig	2008-09-06 15:20:44.000000000 +0800
-+++ setup.py	2008-09-06 15:21:06.000000000 +0800
-@@ -44,5 +44,5 @@
-       author_email = "webmaster@mems-exchange.org",
-       url = "http://www.mems-exchange.org/software/durus/",
-       ext_modules = [persistent],
--      license = "see LICENSE.txt",
-+      license = "CNRI",
-       )
