@@ -1,14 +1,13 @@
 # Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
 # Author: Charles Wang <charlesw123456@gmail.com>
 
+import copy
 import os
 import os.path
-import sys
 
-from pkg_resources import parse_requirements
 from setuptools.package_index import PackageIndex
 
-from pypi2pkgsys import patchdir, config
+from pypi2pkgsys import pkgroot, patchdir, config
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.pypi_utils import *
 
@@ -20,10 +19,10 @@ class PYPI2Package(object):
                          '--deps' : 'false' }
 
         self.pkgsys = PackageSystem()
-        self.options = self.pkgsys.InitializeOptions(self.options)
+        self.pkgsys.init_options(self.options)
 
         optname = None
-        self.packages = []
+        self.pkgreqmap = {}
 
         for arg in argv[1:]:
             if optname is not None:
@@ -32,7 +31,7 @@ class PYPI2Package(object):
             elif arg in self.options:
                 optname = arg
             else:
-                self.packages.append(arg)
+                reqmap_add(self.pkgreqmap, reqstr2obj(arg))
 
         # Ensure the exists of the working directories.
         map(lambda diropt: ensure_dir(self.options[diropt]),
@@ -43,7 +42,7 @@ class PYPI2Package(object):
             deps == 'true' or deps == 't' or \
             deps == 'yes' or deps == 'y'
 
-        self.options = self.pkgsys.FinalizeOptions(self.options)
+        self.pkgsys.finalize_options(self.options)
 
         idx = 0
         while True:
@@ -59,111 +58,109 @@ class PYPI2Package(object):
 
     def run(self):
         logfp = self.options['log']
+        args = copy.copy(self.options)
         # Prepare for iterations.
         pkgidx = PackageIndex(index_url = self.options['--url'])
-        packages = self.packages
-        dldir = self.options['--download-dir']
-        unpackdir = self.options['--unpack-dir']
+        pkgreqmap = self.pkgreqmap
+        dldir = args['--download-dir']
+        unpackdir = args['--unpack-dir']
 
         # Main loop.
         ok_packages = []
-        while len(packages) > 0:
-            new_packages = []
-            for idx in xrange(len(packages)):
-                print
-                pkg = packages[idx]
-
-                pkgname = pkg.split('>=')[0].strip()
+        while len(pkgreqmap) > 0:
+            new_pkgreqmap = {}
+            for pkgreqobj in pkgreqmap.values():
+                pkgname = pkgreqobj.project_name
+                if pkgname in ok_packages: continue
+                ok_packages.append(pkgname)
+                reqstr = str(pkgreqobj)
 
                 try: check_broken(pkgname)
                 except:
-                    exc_value = sys.exc_info()[1]
-                    print '%r is not accepted: %r' % (pkgname, exc_value)
+                    in_except(None, pkgname, 'masked')
                     continue
 
-                print 'Downloading %s ...' % pkg
+                # Collect values into args step by step.
+                args = copy.copy(self.options)
+
+                print '\nDownloading %s ...' % reqstr
                 try:
-                    dist = map(lambda reqobj:
-                                   pkgidx.fetch_distribution(reqobj, dldir,
-                                                             source = True),
-                               parse_requirements([pkg]))[0]
+                    dist = pkgidx.fetch_distribution(pkgreqobj, dldir,
+                                                     source = True)
+                    if dist is None:
+                        raise RuntimeError, 'None'
                 except:
-                    exc_value = sys.exc_info()[1]
-                    print 'Download %s failed: %s!' % (pkgname, exc_value)
-                    logfp.write('%s = Download failed: %s\n' % \
-                                    (pkgname, exc_value))
-                    logfp.flush()
-                    continue
-                if dist is None:
-                    print 'Download %s failed!' % pkgname
-                    logfp.write('%s = No downloads.\n' % pkgname)
-                    logfp.flush()
+                    in_except(logfp, pkgname, 'Download %s failed' % reqstr)
                     continue
 
-                print 'Unpacking ...', pkg
-                try: cfgmap = smart_archive(dist, unpackdir)
+                print 'Unpacking ...', dist.location
+                try: smart_archive(args, dist, unpackdir)
                 except:
-                    exc_value = sys.exc_info()[1]
-                    print 'Unpack %s failed: %s!' % (pkgname, exc_value)
-                    logfp.write('%s = Unpack failed: %s\n' % \
-                                    (pkgname, exc_value))
-                    logfp.flush()
+                    in_except(logfp, pkgname, 'Unpack %s failed' % reqstr)
                     continue
-                unpackpath = cfgmap['unpackpath']
+                unpackpath = args['unpackpath']
 
-                # Prepare parameters.
-                print 'Processing ...', pkg
-                pkgnamever = '%s-%s' % (dist.project_name, dist.version)
-                if config.has_section(pkgnamever):
-                    for name, value in config.items(pkgnamever):
-                        cfgmap[name] = value
-                if config.has_section(dist.project_name):
-                    for name, value in config.items(dist.project_name):
-                        if name not in cfgmap: cfgmap[name] = value
-                if not 'patches' in cfgmap: cfgmap['patches'] = []
-                else: cfgmap['patches'] = cfgmap['patches'].split()
+                print 'Processing ...', pkgname
+                for secname in ('%s-%s' % (dist.project_name, dist.version),
+                                dist.project_name):
+                    if config.has_section(secname):
+                        for name, value in config.items(secname):
+                            if name not in args: args[name] = value
+                if not 'patches' in args: args['patches'] = []
+                else: args['patches'] = args['patches'].split()
 
                 # Apply patches.
-                for p in cfgmap['patches']:
-                    print 'Applying %s' % p
+                for patch in args['patches']:
+                    print 'Applying %s ...' % patch
                     os.system('(cd %s; patch -p0 < %s)' % \
-                                  (unpackpath, os.path.join(patchdir, p)))
-                pkgtype = check_package_type(unpackpath)
-                if pkgtype == 'setup.py':
-                    fix_setup(unpackpath)
-                    print 'Get distribution args from %s' % unpackpath
-                    try: args = get_package_args(unpackpath)
+                                  (unpackpath, os.path.join(patchdir, patch)))
+                
+                if args['pkgtype'] == 'setup.py':
+                    fix_setup(os.path.join(unpackpath, args['setup_path']))
+                    print 'Get distribution args from %s ...' % unpackpath
+                    try: get_package_args(args)
                     except:
-                        exc_value = sys.exc_info()[1]
-                        print 'Dump %s failed: %s.' % (pkgname, exc_value)
-                        logfp.write('%s = Dump args failed: %s\n' % \
-                                        (pkgname, exc_value))
-                        logfp.flush()
+                        in_except(logfp, pkgname, '"setup.py dump" failed')
                         continue
-                else:
-                    print '%s: Unsupported package type.' % pkgname
-                    logfp.write('%s = Unsupport package type.\n' % pkgname)
-                    logfp.flush()
-                    continue
 
-                args = fix_args(pkgname, args)
+                fix_args(args, pkgname)
 
                 # Generate package from args and options.
                 try:
-                    updated, deps = \
-                        self.pkgsys.GenPackage(pkgtype, args, self.options,
-                                               cfgmap)
+                    self.pkgsys.setup_args(args)
                 except:
-                    exc_value = sys.exc_info()[1]
-                    print '%s: GenPackage failed: %s' % (pkgname, exc_value)
-                    logfp.write('%s = GenPackage failed: %s\n' %\
-                                    (pkgname, exc_value))
-                    logfp.flush()
-                    deps = []
-                new_packages = uniq_extend(new_packages, deps)
+                    in_except(logfp, pkgname, 'pkgsys.setup_args failed')
 
-            # Process all required but not processed packages.
-            packages = []
-            if self.options['--deps']:
-                for pkg in new_packages:
-                    if pkg not in ok_packages: packages.append(pkg)
+                tmplf = file(os.path.join(pkgroot, args['template']))
+                tmpl = tmplf.read()
+                tmplf.close()
+
+                ensure_dir(os.path.dirname(args['output']))
+                print 'Writing %s' % args['output']
+                if smart_write(args['output'], tmpl % args): updated = True
+                if smart_symlink(args['pkgpath'],
+                                 os.path.join(args['filedir'],
+                                              args['pkgfile'])):
+                    updated = True
+                if args['patches'] != []:
+                    ensure_dir(args['patchdir'])
+                    for patch in args['patches']:
+                        if smart_symlink(os.path.join(patchdir, patch),
+                                         os.path.join(args['patchdir'],
+                                                      patch)):
+                            updated = True
+                try:
+                    self.pkgsys.process(args)
+                except:
+                    in_except(logfp, pkgname, 'process failed')
+
+                if self.options['--deps']:
+                    reqstrlist = args['install_requires']
+                    for k in args['extras_require'].keys():
+                        reqstrlist.extend(args['extras_require'][k])
+                    for reqstr in reqstrlist:
+                        reqmap_add(new_pkgreqmap, reqstr2obj(reqstr))
+
+                # Process of a single package is finished.
+
+            pkgreqmap = new_pkgreqmap
