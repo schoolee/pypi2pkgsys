@@ -4,14 +4,14 @@ class PackageSystem(object):
     def __init__(self):
         pass
 
-    def InitializeOptions(self, options):
+    def init_options(self, options):
         raise RuntimeError, 'It has to be overridden.'
 
-    def FinalizeOptions(self, options):
+    def finalize_options(self, options):
         raise RuntimeError, 'It has to be overridden.'
 
-    def GenPackage(self, pkgtype, args, options, cfgmap):
+    def setup_args(self, args):
         raise RuntimeError, 'It has to be overridden.'
 
-    def PostGenerate(self, name, version):
+    def process(self, args):
         pass
