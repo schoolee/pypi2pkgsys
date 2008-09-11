@@ -25,7 +25,7 @@ class PkgSysPortage(PackageSystem):
 
     def setup_args(self, args):
         args['self'] = sys.argv[0]
-        if args['license'] != '':
+        if args['license'] != None and args['license'] != '':
             args['license'] = LicenseConvert(args['name'], args['license'])
         elif 'classifiers' in args and args['classifiers'] is not None:
             for cfline in args['classifiers']:

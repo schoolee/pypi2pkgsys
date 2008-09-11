@@ -124,9 +124,6 @@ def smart_archive(args, dist, unpackdir):
     else:
         raise RuntimeError, 'Unrecognized archive format: %s' % dist.location
 
-    print 'leading_dir', repr(leading_dir)
-    print 'single_file', repr(single_file)
-    print 'setup_path', repr(setup_path)
     if leading_dir is None or single_file is None:
         raise RuntimeError, 'Empty package encountered: %s' % dist.location
     elif leading_dir is False:
