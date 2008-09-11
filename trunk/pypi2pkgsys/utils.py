@@ -30,11 +30,6 @@ def smart_symlink(src, dst):
     os.symlink(src, dst)
     return True
 
-def uniq_extend(result, added):
-    for a in added:
-        if a not in result: result.append(a)
-    return result
-
 def cut_parentheses(value):
     retvalue = ''; lvl = 0
     for ch in value:
