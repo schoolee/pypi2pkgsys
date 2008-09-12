@@ -124,7 +124,7 @@ for pl in glob.glob('/usr/portage/licenses/*'):
     if pl_lower not in portage_licenses: portage_licenses[pl_lower] = pl
 
 def LicenseConvert(pkgname, pkglicense):
-    if pkgname in portage_licenses: return portage_license[pkgname]
+    if pkgname in portage_licenses: return portage_licenses[pkgname]
     if pkglicense.lower() in fullmap: return fullmap[pkglicense.lower()]
     pkglicense_bk = pkglicense
     pkglicense = cut_parentheses(pkglicense)
