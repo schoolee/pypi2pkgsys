@@ -6,6 +6,9 @@ import os.path
 import string
 import sys
 
+import portage
+from portage.manifest import Manifest
+
 from pypi2pkgsys.PackageSystem import PackageSystem
 from pypi2pkgsys.utils import ensure_dir
 from pypi2pkgsys.portage.utils import *
@@ -80,6 +83,14 @@ class PkgSysPortage(PackageSystem):
 
     def process(self, args):
         # Call ebuild ... digest
-        cmd = 'ebuild %s digest' % args['output']
-        print 'Running %s ...' % cmd
-        os.system(cmd)
+        print 'ebuild %s manifest ...' % args['output']
+        pkgdir = os.path.dirname(args['output'])
+        settings = portage.config(clone = portage.settings)
+        fetchlist_dict = portage.FetchlistDict(pkgdir, settings, portage.portdb)
+        mf = Manifest(pkgdir, args['--portage-distfiles'],
+                      fetchlist_dict = fetchlist_dict,
+                      manifest1_compat = False)
+        mf.create(requiredDistfiles = None,
+                  assumeDistHashesSometimes = True,
+                  assumeDistHashesAlways = True)
+        mf.write()
