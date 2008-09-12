@@ -18,7 +18,7 @@ class PkgSysPortage(PackageSystem):
         PackageSystem.__init__(self)
 
     def init_options(self, options):
-        options['--portage-distfiles'] = '/usr/portage/distfiles'
+        options['--portage-distfiles'] = portage.settings['DISTDIR']
         options['--portage-dir'] = os.path.join('/usr/local/portage',
                                                 pypi_dir)
 
@@ -84,13 +84,17 @@ class PkgSysPortage(PackageSystem):
     def process(self, args):
         # Call ebuild ... digest
         print 'ebuild %s manifest ...' % args['output']
-        pkgdir = os.path.dirname(args['output'])
-        settings = portage.config(clone = portage.settings)
-        fetchlist_dict = portage.FetchlistDict(pkgdir, settings, portage.portdb)
-        mf = Manifest(pkgdir, args['--portage-distfiles'],
-                      fetchlist_dict = fetchlist_dict,
-                      manifest1_compat = False)
-        mf.create(requiredDistfiles = None,
-                  assumeDistHashesSometimes = True,
-                  assumeDistHashesAlways = True)
-        mf.write()
+        try:
+            portage._doebuild_manifest_exempt_depend += 1
+            pkgdir = os.path.dirname(args['output'])
+            fetchlist_dict = portage.FetchlistDict(pkgdir, portage.settings,
+                                                   portage.portdb)
+            mf = Manifest(pkgdir, args['--portage-distfiles'],
+                          fetchlist_dict = fetchlist_dict,
+                          manifest1_compat = False)
+            mf.create(requiredDistfiles = None,
+                      assumeDistHashesSometimes = True,
+                      assumeDistHashesAlways = True)
+            mf.write()
+        finally:
+            portage._doebuild_manifest_exempt_depend -= 1
