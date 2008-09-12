@@ -4,6 +4,7 @@
 
 import os.path
 import popen2
+import re
 import shutil
 import sys
 import tarfile
@@ -182,20 +183,31 @@ def fix_setup(setup_path):
 
 popen_fmt = '(cd %s; python setup.py dump)'
 def get_package_args(args):
-    p = popen2.popen2(popen_fmt % args['unpackpath'])
+    p = popen2.popen3(popen_fmt % args['unpackpath'])
     p[1].close()
     ln = p[0].readline()
     while ln:
         if ln.strip() == '**** PyPI2PkgSys ****': break
         ln = p[0].readline()
-    if not ln: raise RuntimeError, 'dump does not work.'
-    c = p[0].readline()
-    p[0].close()
-    newargs = eval(c)
-    shutil.rmtree(args['unpackpath'])
-    for k in newargs.keys():
-        if k not in args: args[k] = newargs[k]
-        else: raise RuntimeError, 'args key conflict: %s' % k
+    if ln: # We got result.
+        c = p[0].readline()
+        p[0].close()
+        newargs = eval(c)
+        shutil.rmtree(args['unpackpath'])
+        for k in newargs.keys():
+            if k not in args: args[k] = newargs[k]
+            else: raise RuntimeError, 'args key conflict: %s' % k
+        p[2].close()
+    else: # Some error encountered.
+        p[0].close()
+        cr = re.compile('\w+Error:\s+')
+        ln = p[2].readline()
+        while ln:
+            if cr.match(ln):
+                p[2].close()
+                raise RuntimeError, ln.strip()
+            ln = p[2].readline()
+        raise RuntimeError
 
 def fix_args(args, pkgname):
     if pkgname in pkg2license: args['license'] = pkg2license[pkgname]
