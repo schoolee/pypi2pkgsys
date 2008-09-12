@@ -75,6 +75,8 @@ class PYPI2Package(object):
                 ok_packages.append(pkgname)
                 reqstr = str(pkgreqobj)
 
+                print
+
                 try: check_broken(pkgname)
                 except:
                     in_except(None, pkgname, 'masked')
@@ -83,7 +85,7 @@ class PYPI2Package(object):
                 # Collect values into args step by step.
                 args = copy.copy(self.options)
 
-                print '\nDownloading %s ...' % reqstr
+                print 'Downloading %s ...' % reqstr
                 try:
                     dist = pkgidx.fetch_distribution(pkgreqobj, dldir,
                                                      source = True)
