@@ -130,6 +130,7 @@ class PYPI2Package(object):
                     self.pkgsys.setup_args(args)
                 except:
                     in_except(logfp, pkgname, 'pkgsys.setup_args failed')
+                    continue
 
                 tmplf = file(os.path.join(pkgroot, args['template']))
                 tmpl = tmplf.read()
@@ -153,6 +154,7 @@ class PYPI2Package(object):
                     self.pkgsys.process(args)
                 except:
                     in_except(logfp, pkgname, 'process failed')
+                    continue
 
                 if self.options['--deps']:
                     reqstrlist = args['install_requires']
@@ -160,6 +162,8 @@ class PYPI2Package(object):
                         reqstrlist.extend(args['extras_require'][k])
                     for reqstr in reqstrlist:
                         reqmap_add(new_pkgreqmap, reqstr2obj(reqstr))
+
+                print 'Finish the processing of %s.' % pkgname
 
                 # Process of a single package is finished.
 
