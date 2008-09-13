@@ -204,7 +204,7 @@ def smart_archive(args, dist, unpackdir):
             while True:
                 path, fname = os.path.split(path)
                 if path == '':
-                    if isfile: return ''
+                    if isfile: return False
                     else: return fname
                 elif path == '/':
                     if isfile: return '/'
@@ -245,7 +245,6 @@ def smart_archive(args, dist, unpackdir):
     else:
         raise RuntimeError, 'Unrecognized archive format: %s' % dist.location
 
-    print 'leading_dir, single_py', leading_dir, single_py
     if leading_dir is None or single_py is None:
         raise RuntimeError, 'Empty package encountered: %s' % dist.location
     elif leading_dir is False:
