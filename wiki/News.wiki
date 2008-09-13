@@ -2,6 +2,30 @@
 
 = News of pypi2pkgsys =
 
+== September 13, 2008 ==
+
+There are many enhancements of pypi2pkgsys in this week. I'm tring to let it
+scan the PyPI index automatically. Most of the problems encountered can be
+recorded automatically. And all log informations can be reported into the
+specified log files without any handwork.
+
+Now the PyPI packages which have only one python file is supported. Such as
+"DeferArgs" and "googlecalc".
+
+Wildcard in PyPI packages name is supported. pypi2pkgsys will search in
+PyPI index and write ebuild for all of the matched packages.
+
+TODO:
+
+The progress informations should be added, for example: How many packages are
+processed and the total number of the packages in the current list.
+
+For the packages which problem can be resolved easily, I shall try to provide
+a patch for them.
+
+Scan more packages to find what problems will be encountered and try resolve
+them.
+
 == September 7, 2008 ==
 
 Now I'm working on the first scan of all PyPI packages. Of course there are
