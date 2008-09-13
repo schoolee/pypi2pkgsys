@@ -56,7 +56,7 @@ class pypilog(object):
         # Load self.pkginfo_map
         ln = logfp.readline()
         while ln and ln.strip() != self.logsep:
-            krepr, vrepr = ln.split()
+            krepr, vrepr = ln.split('\t')
             k = eval(krepr); v = eval(vrepr)
             self.pkginfo_map[k] = v
             ln = logfp.readline()
