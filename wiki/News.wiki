@@ -13,7 +13,7 @@ Now the PyPI packages which have only one python file is supported. Such as
 "DeferArgs" and "googlecalc".
 
 Wildcard in PyPI packages name is supported. pypi2pkgsys will search in
-PyPI index and write ebuild for all of the matched packages.
+PyPI index and write ebuilds for all of the matched packages.
 
 TODO:
 
@@ -21,10 +21,10 @@ The progress informations should be added, for example: How many packages are
 processed and the total number of the packages in the current list.
 
 For the packages which problem can be resolved easily, I shall try to provide
-a patch for them.
+patches for them.
 
-Scan more packages to find what problems will be encountered and try resolve
-them.
+Scan more packages to find what problems might be encountered and try to
+resolve them.
 
 == September 7, 2008 ==
 
