@@ -35,6 +35,9 @@ wildcards. Version specification, such as >= 0.1, can be used too.
 The execution of the pypi2portage require root privilege because it has to
 write in /var/tmp/pypi, /usr/local/portage, /usr/portage/distfiles.
 
+If the requested ebuilds are generated successfully, you can emerge them.
+
 == Examples ==
 
 # pypi2pkgsys Pylons
+# emerge pylons
