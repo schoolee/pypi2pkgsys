@@ -11,12 +11,22 @@ from pypi2pkgsys import pkgroot, patchdir, config
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.pypi_utils import *
 
+def get_bool_opt(stropt):
+    stropt = stropt.lower()
+    for strvalue, boolvalue in (('false', False), ('no', False),
+                                ('true', True), ('yes', True)):
+        if stropt == strvalue: return boolvalue
+        if stropt == strvalue[0]: return boolvalue
+    raise RuntimeError, 'Unsupport bool value: %s' % stropt
+
 class PYPI2Package(object):
     def __init__(self, PackageSystem, argv):
         self.options = { '--url' : 'http://pypi.python.org/simple',
                          '--download-dir' : '/var/tmp/pypi/downloads',
                          '--unpack-dir' : '/var/tmp/pypi/unpack',
-                         '--deps' : 'false' }
+                         '--deps' : 'false',
+                         '--use-log' : 'true',
+                         '--log-path' : '/var/tmp/pypi/pypi2pkgsys.log' }
 
         self.pkgsys = PackageSystem()
         self.pkgsys.init_options(self.options)
@@ -37,27 +47,15 @@ class PYPI2Package(object):
         map(lambda diropt: ensure_dir(self.options[diropt]),
             ['--download-dir', '--unpack-dir'])
 
-        deps = self.options['--deps'].lower()
-        self.options['--deps'] = \
-            deps == 'true' or deps == 't' or \
-            deps == 'yes' or deps == 'y'
+        self.options['--deps'] = get_bool_opt(self.options['--deps'])
+        self.options['--use-log'] = get_bool_opt(self.options['--use-log'])
 
         self.pkgsys.finalize_options(self.options)
 
-        idx = 0
-        while True:
-            logfn = 'pypi-download.%03d.log' % idx
-            if not os.path.exists(logfn):
-                logfile = file(logfn, 'w')
-                break
-            idx = idx + 1
-        self.options['log'] = logfile
-
-    def __del__(self):
-        self.options['log'].close()
+        if not self.options['--use-log']: self.logobj = pypilog(None)
+        else: self.logobj = pypilog(self.options['--log-path'])
 
     def run(self):
-        logfp = self.options['log']
         args = copy.copy(self.options)
         # Prepare for iterations.
         pkgidx = PackageIndex(index_url = self.options['--url'])
@@ -77,10 +75,8 @@ class PYPI2Package(object):
 
                 print
 
-                try: check_broken(pkgname)
-                except:
-                    in_except(None, pkgname, 'masked')
-                    continue
+                try: self.logobj.check_broken(pkgname)
+                except: continue
 
                 # Collect values into args step by step.
                 args = copy.copy(self.options)
@@ -92,13 +88,14 @@ class PYPI2Package(object):
                     if dist is None:
                         raise RuntimeError, 'None'
                 except:
-                    in_except(logfp, pkgname, 'Download %s failed' % reqstr)
+                    self.logobj.in_except(pkgname,
+                                          'Download %s failed' % reqstr)
                     continue
 
                 print 'Unpacking ...', dist.location
                 try: smart_archive(args, dist, unpackdir)
                 except:
-                    in_except(logfp, pkgname, 'Unpack %s failed' % reqstr)
+                    self.logobj.in_except(pkgname, 'Unpack %s failed' % reqstr)
                     continue
                 unpackpath = args['unpackpath']
 
@@ -122,7 +119,8 @@ class PYPI2Package(object):
                     print 'Get distribution args from %s ...' % unpackpath
                     try: get_package_args(args)
                     except:
-                        in_except(logfp, pkgname, '"setup.py dump" failed')
+                        self.logobj.in_except(pkgname,
+                                              '"setup.py dump" failed')
                         continue
 
                 fix_args(args, pkgname)
@@ -131,16 +129,15 @@ class PYPI2Package(object):
                 try:
                     self.pkgsys.setup_args(args)
                 except:
-                    in_except(logfp, pkgname, 'pkgsys.setup_args failed')
+                    self.logobj.in_except(pkgname, 'pkgsys.setup_args failed')
                     continue
-
-                tmplf = file(os.path.join(pkgroot, args['template']))
-                tmpl = tmplf.read()
-                tmplf.close()
 
                 ensure_dir(os.path.dirname(args['output']))
                 print 'Writing %s' % args['output']
-                if smart_write(args['output'], tmpl % args): updated = True
+                if smart_write(args['output'],
+                               os.path.join(pkgroot, args['template']),
+                               args):
+                    updated = True
                 if smart_symlink(args['pkgpath'],
                                  os.path.join(args['filedir'],
                                               args['pkgfile'])):
@@ -155,7 +152,7 @@ class PYPI2Package(object):
                 try:
                     self.pkgsys.process(args)
                 except:
-                    in_except(logfp, pkgname, 'process failed')
+                    self.logobj.in_except(pkgname, 'process failed')
                     continue
 
                 if self.options['--deps']:
@@ -165,7 +162,7 @@ class PYPI2Package(object):
                     for reqstr in reqstrlist:
                         reqmap_add(new_pkgreqmap, reqstr2obj(reqstr))
 
-                print 'Finish the processing of %s.' % pkgname
+                self.logobj.pkgname_ok(pkgname)
 
                 # Process of a single package is finished.
 
