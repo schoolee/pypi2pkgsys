@@ -95,7 +95,7 @@ class pypilog(object):
         for k in karr:
             logfp.write('%r\n' % k)
             for msg in self.tmpfailed_map[k]:
-                logfp.write('\t%r\n', msg)
+                logfp.write('\t%r\n' % msg)
         logfp.close()
         curstat = os.stat(self.log_path)
         self.st_mtime = curstat.st_mtime
