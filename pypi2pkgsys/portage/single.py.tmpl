@@ -12,6 +12,9 @@ KEYWORDS="~alpha ~amd64 ~hppa ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 SLOT="0"
 IUSE=""
 
+DEPEND="virtual/python"
+python="python"
+
 S=${WORKDIR}/${MY_PD}
 
 src_unpack() {
@@ -21,7 +24,7 @@ src_unpack() {
 }
 
 src_install() {
-	pylibdir="$(${python} -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()')"
+	pylibdir="$(python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()')"
 	[ -n "${pylibdir}" ] && dodir "${pylibdir}"
 
 	cp * ${D}/${pylibdir}
