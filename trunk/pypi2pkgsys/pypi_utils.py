@@ -2,13 +2,15 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: BSD
 
+import fcntl
+import fnmatch
 import os.path
 import popen2
-import posixfile
 import re
 import shutil
 import sys
 import tarfile
+import urllib2
 import zipfile
 from pkg_resources import parse_requirements
 from setuptools.archive_util import unpack_archive
@@ -38,11 +40,17 @@ class pypilog(object):
     def __init__(self, log_path):
         self.log_path = log_path
         if self.log_path is not None:
+            self.lockfd = os.open(self.lockpath,
+                                  os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
             if not os.path.isfile(log_path):
                 if os.path.exists(log_path): os.remove(log_path)
                 shutil.copyfile(os.path.join(patchdir, 'pypi2pkgsys.log'),
                                 log_path)
             self.load_from_file()
+
+    def __del__(self):
+        if self.log_path is not None:
+            os.close(self.lockfd)
 
     def check_update(self):
         curstat = os.stat(self.log_path)
@@ -103,19 +111,19 @@ class pypilog(object):
     def pkgname_ok(self, pkgname):
         print '%s: %s' % (pkgname, self.okvalue)
         if self.log_path is None: return
-        lock = self._ack_lock()
+        self._acq_lock()
         # Update it in the protection of lock.
         if not self.check_update(): self.load_from_file()
         self.pkginfo_map[pkgname] = self.okvalue
         if pkgname in self.tmpfailed_map: del(self.tmpfailed_map[pkgname])
         self.save_to_file()
-        self._rel_lock(lock)
+        self._rel_lock()
 
     def in_except(self, pkgname, msg):
         exc_value = sys.exc_info()[1]
         print '%s: %s: %s' % (pkgname, msg, exc_value)
         if self.log_path is None: return
-        lock = self._ack_lock()
+        self._acq_lock()
         # Update it in the protection of lock.
         if not self.check_update(): self.load_from_file()
         if pkgname in self.pkginfo_map:
@@ -129,18 +137,40 @@ class pypilog(object):
         else:
             self.pkginfo_map[pkgname] = msg
         self.save_to_file()
-        self._rel_lock(lock)
+        self._rel_lock()
 
-    def _ack_lock(self):
-        lock = posixfile.open(self.lockpath, 'w')
-        if lock.lock('w?'):
+    def _acq_lock(self):
+        try: fcntl.lockf(self.lockfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
             print 'Waiting the lock: ', self.lockpath
-            lock.lock('w|')
-        return lock
+            fcntl.lockf(self.lockfd, fcntl.LOCK_EX)
 
-    def _rel_lock(self, lock):
-        lock.lock('u')
-        lock.close()
+    def _rel_lock(self):
+        fcntl.lockf(self.lockfd, fcntl.LOCK_UN)
+
+valid_cr = re.compile('^[\w\d\-\_\.]+$')
+def pypi_match(logobj, matchlist, url = 'http://pypi.python.org/simple'):
+    prefix = "<a href='"; sep = "/'>"; suffix = "</a><br/>"
+    result = []
+    sockf = urllib2.urlopen(url)
+    ln = sockf.readline()
+    while ln:
+        ln = ln.strip()
+        lnidx = ln.find(sep)
+        if lnidx > 0 and ln.startswith(prefix) and ln.endswith(suffix):
+            s0 = ln[len(prefix):lnidx]
+            s1 = ln[lnidx + len(sep): -len(suffix)]
+            if s0 == s1: # A valid PyPI package name is recognized.
+                for match in matchlist:
+                    if fnmatch.fnmatch(s0, match):
+                        if valid_cr.match(s0) is None:
+                            logobj.in_except(s0, 'Invalid name')
+                        else:
+                            result.append(s0)
+                        break
+        ln = sockf.readline()
+    sockf.close()
+    return result
 
 def reqstr2obj(reqstr):
     return list(parse_requirements([reqstr]))[0]
