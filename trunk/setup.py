@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# Copyright (C) 2008, Charles Wang <charlesw1234@163.com>
-# Author: Charles Wang <charlesw1234@163.com>
+# Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
+# Author: Charles Wang <charlesw123456@gmail.com>
 """Generate ebuilds for the selected PyPI packages, so they can be emerged
 but not easy_installed in Gentoo."""
 
@@ -8,7 +8,7 @@ import glob
 import os.path
 from setuptools import setup, find_packages
 
-version = '0.0.5'
+version = '0.0.6'
 
 setup(name = 'pypi2pkgsys',
       version = version,
@@ -25,7 +25,7 @@ dpkg for dpkg-base distribution will be added in future.
       keywords = 'PyPI distutils setuptools package management',
       license = 'BSD',
       author = 'Charles Wang',
-      author_email = 'charlesw1234@163.com',
+      author_email = 'charlesw123456@gmail.com',
       url = 'http://code.google.com/p/pypi2pkgsys/',
       packages = find_packages(),
       scripts = map(lambda s: os.path.join('scripts', s),

@@ -1,4 +1,4 @@
-# Author: Charles Wang <charlesw1234@163.com>
+# Author: Charles Wang <charlesw123456@gmail.com>
 
 class PackageSystem(object):
     def __init__(self):
