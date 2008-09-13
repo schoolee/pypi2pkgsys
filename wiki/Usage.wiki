@@ -41,3 +41,6 @@ If the requested ebuilds are generated successfully, you can emerge them.
 
 # pypi2pkgsys Pylons
 # emerge pylons
+
+Scan all packages which are started by 'A' or 'a'.
+# pypi2pkgsys [Aa]*
