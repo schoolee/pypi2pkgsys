@@ -14,8 +14,13 @@ setup(name = 'pypi2pkgsys',
       version = version,
       description = 'Generate package files(gentoo ebuild) for selected PyPI packages',
       long_description = """Generate package files from the selected PyPI packages.
+
 Now only ebuild for gentoo is generated. spec for rpm-base distribution,
 dpkg for dpkg-base distribution will be added in future.
+
+* News: http://code.google.com/p/pypi2pkgsys/wiki/News
+* Main: http://code.google.com/p/pypi2pkgsys/wiki/Main
+* Usage: http://code.google.com/p/pypi2pkgsys/wiki/Usage
 """,
       keywords = 'PyPI distutils setuptools package management',
       license = 'BSD',
