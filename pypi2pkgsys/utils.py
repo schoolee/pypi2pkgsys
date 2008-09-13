@@ -12,7 +12,7 @@ def ensure_dir(dir):
 def smart_write(output, template, args):
     tf = open(template); tmpl = tf.read(); tf.close()
     content = tmpl % args
-    if os.path.isfile(output) or os.path.islink(fpath):
+    if os.path.isfile(output) or os.path.islink(output):
         f = open(output)
         orig_content = f.read()
         f.close()
