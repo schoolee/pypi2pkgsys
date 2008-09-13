@@ -16,7 +16,7 @@ just add it and assign it in command line.
 == Command line ==
 
 Possible options for all of the three commands:
- * --url: The url of the PyPI index, the default value is: http://pypi.python.org/siple
+ * --url: The url of the PyPI index, the default value is: http://pypi.python.org/simple
  * --download-dir: Where to save the downloaded package files, the default value is: /var/tmp/pypi/downloads.
  * --unpack-dir: Where to unpack the downloaded package files, the default value is: /var/tmp/pypi/unpack.
  * --deps: Whether to generate the depended packages, the default value is: false.
