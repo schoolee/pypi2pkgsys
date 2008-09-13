@@ -199,7 +199,7 @@ def reqmap_add(reqmap, reqobj):
 def smart_archive(args, dist, unpackdir):
     # Set pkgpath, pkgfile, pkgdir, unpackpath, pkgtype.
     # setup_path is optional.
-    def check_filename(fname, isfile, leading_dir, single_file, setup_path):
+    def check_filename(fname, isfile, leading_dir, single_py, setup_path):
         def first_dir(path, isfile):
             while True:
                 path, fname = os.path.split(path)
@@ -215,37 +215,38 @@ def smart_archive(args, dist, unpackdir):
         elif leading_dir is False: pass
         elif leading_dir != first_dir(fname, isfile): leading_dir = False
 
-        if isfile:
-            if single_file is None: single_file = fname
-            elif single_file is False: pass
-            else: single_file = False
+        if isfile and os.path.splitext(fname)[-1] == '.py':
+            if single_py is None: single_py = fname
+            elif single_py is False: pass
+            else: single_py = False
 
         if isfile and os.path.basename(fname) == 'setup.py':
             if setup_path is None: setup_path = fname
             elif len(fname) < len(setup_path): setup_path = fname
-        return leading_dir, single_file, setup_path
+        return leading_dir, single_py, setup_path
 
     args['pkgpath'] = dist.location
     args['pkgfile'] = os.path.basename(dist.location)
-    leading_dir = None; single_file = None; setup_path = None
+    leading_dir = None; single_py = None; setup_path = None
     if tarfile.is_tarfile(dist.location):
         tf = tarfile.open(dist.location, 'r:*')
         for tfi in tf.getmembers():
-            leading_dir, single_file, setup_path = \
+            leading_dir, single_py, setup_path = \
                 check_filename(tfi.name, tfi.isfile(),
-                               leading_dir, single_file, setup_path)
+                               leading_dir, single_py, setup_path)
         tf.close()
     elif zipfile.is_zipfile(dist.location):
         zf = zipfile.ZipFile(dist.location)
         for zfn in zf.namelist():
-            leading_dir, single_file, setup_path = \
+            leading_dir, single_py, setup_path = \
                 check_filename(zfn, True,
-                               leading_dir, single_file, setup_path)
+                               leading_dir, single_py, setup_path)
         zf.close()
     else:
         raise RuntimeError, 'Unrecognized archive format: %s' % dist.location
 
-    if leading_dir is None or single_file is None:
+    print 'leading_dir, single_py', leading_dir, single_py
+    if leading_dir is None or single_py is None:
         raise RuntimeError, 'Empty package encountered: %s' % dist.location
     elif leading_dir is False:
         if dist.version == '': args['pkgdir'] = dist.project_name
@@ -264,8 +265,8 @@ def smart_archive(args, dist, unpackdir):
     if setup_path is not None:
         args['setup_path'] = setup_path
         args['pkgtype'] = 'setup.py'
-    elif single_file is not False:
-        args['pkgtype'] = 'single'
+    elif single_py is not False:
+        args['pkgtype'] = 'single.py'
     else:
         raise RuntimeError, 'Unsupported archive type'
 
@@ -302,7 +303,7 @@ def fix_setup(setup_path):
         setup_fp.close()
 
 popen_fmt = '(cd %s; python setup.py dump)'
-def get_package_args(args):
+def setup_dump(args):
     p = popen2.popen3(popen_fmt % args['unpackpath'])
     p[1].close()
     ln = p[0].readline()
@@ -313,7 +314,6 @@ def get_package_args(args):
         c = p[0].readline()
         p[0].close()
         newargs = eval(c)
-        shutil.rmtree(args['unpackpath'])
         for k in newargs.keys():
             if k not in args: args[k] = newargs[k]
             else: raise RuntimeError, 'args key conflict: %s' % k
@@ -329,8 +329,15 @@ def get_package_args(args):
             ln = p[2].readline()
         raise RuntimeError
 
-def fix_args(args, pkgname):
-    if pkgname in pkg2license: args['license'] = pkg2license[pkgname]
+def get_package_args(args, dist):
+    if args['pkgtype'] == 'setup.py':
+        fix_setup(os.path.join(args['unpackpath'], args['setup_path']))
+        setup_dump(args)
+    elif args['pkgtype'] == 'single.py':
+        args['name'] = dist.project_name
+        args['version'] = dist.version
+    if dist.project_name in pkg2license:
+        args['license'] = pkg2license[dist.project_name]
     elif 'license' not in args: args['license'] = 'UNKNOWN'
     if 'install_requires' not in args or \
             args['install_requires'] is None:
@@ -338,3 +345,4 @@ def fix_args(args, pkgname):
     if 'extras_require' not in args or \
             args['extras_require'] is None:
         args['extras_require'] = {}
+    shutil.rmtree(args['unpackpath'])

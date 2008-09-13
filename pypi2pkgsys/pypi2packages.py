@@ -21,10 +21,12 @@ def get_bool_opt(stropt):
 
 class PYPI2Package(object):
     def __init__(self, PackageSystem, argv):
+        self.arg0 = argv[0]
         self.options = { '--url' : 'http://pypi.python.org/simple',
                          '--download-dir' : '/var/tmp/pypi/downloads',
                          '--unpack-dir' : '/var/tmp/pypi/unpack',
                          '--deps' : 'false',
+                         '--skip-broken' : 'true',
                          '--use-log' : 'true',
                          '--log-path' : '/var/tmp/pypi/pypi2pkgsys.log' }
 
@@ -32,7 +34,7 @@ class PYPI2Package(object):
         self.pkgsys.init_options(self.options)
 
         optname = None
-        self.pkgreqmap = {}
+        self.reqarglist = []
 
         for arg in argv[1:]:
             if optname is not None:
@@ -41,14 +43,14 @@ class PYPI2Package(object):
             elif arg in self.options:
                 optname = arg
             else:
-                reqmap_add(self.pkgreqmap, reqstr2obj(arg))
+                self.reqarglist.append(arg)
 
         # Ensure the exists of the working directories.
         map(lambda diropt: ensure_dir(self.options[diropt]),
             ['--download-dir', '--unpack-dir'])
 
-        self.options['--deps'] = get_bool_opt(self.options['--deps'])
-        self.options['--use-log'] = get_bool_opt(self.options['--use-log'])
+        for bopt in ['--skip-broken', '--deps', '--use-log']:
+            self.options[bopt] = get_bool_opt(self.options[bopt])
 
         self.pkgsys.finalize_options(self.options)
 
@@ -56,12 +58,17 @@ class PYPI2Package(object):
         else: self.logobj = pypilog(self.options['--log-path'])
 
     def run(self):
-        args = copy.copy(self.options)
         # Prepare for iterations.
+        pkgreqmap = {}
+        matchlist = []
+        for reqarg in self.reqarglist:
+            if '*' in reqarg or '?' in reqarg: matchlist.append(reqarg)
+            else: reqmap_add(pkgreqmap, reqstr2obj(reqarg))
+        for reqstr in pypi_match(self.logobj, matchlist,
+                                 self.options['--url']):
+            reqmap_add(pkgreqmap, reqstr2obj(reqstr))
+
         pkgidx = PackageIndex(index_url = self.options['--url'])
-        pkgreqmap = self.pkgreqmap
-        dldir = args['--download-dir']
-        unpackdir = args['--unpack-dir']
 
         # Main loop.
         ok_packages = []
@@ -75,15 +82,18 @@ class PYPI2Package(object):
 
                 print
 
-                try: self.logobj.check_broken(pkgname)
-                except: continue
+                if self.options['--skip-broken']:
+                    try: self.logobj.check_broken(pkgname)
+                    except: continue
 
                 # Collect values into args step by step.
                 args = copy.copy(self.options)
+                args['self'] = self.arg0
 
                 print 'Downloading %s ...' % reqstr
                 try:
-                    dist = pkgidx.fetch_distribution(pkgreqobj, dldir,
+                    dist = pkgidx.fetch_distribution(pkgreqobj,
+                                                     self.options['--download-dir'],
                                                      source = True)
                     if dist is None:
                         raise RuntimeError, 'None'
@@ -93,7 +103,7 @@ class PYPI2Package(object):
                     continue
 
                 print 'Unpacking ...', dist.location
-                try: smart_archive(args, dist, unpackdir)
+                try: smart_archive(args, dist, self.options['--unpack-dir'])
                 except:
                     self.logobj.in_except(pkgname, 'Unpack %s failed' % reqstr)
                     continue
@@ -113,19 +123,12 @@ class PYPI2Package(object):
                     print 'Applying %s ...' % patch
                     os.system('(cd %s; patch -p0 < %s)' % \
                                   (unpackpath, os.path.join(patchdir, patch)))
-                
-                if args['pkgtype'] == 'setup.py':
-                    fix_setup(os.path.join(unpackpath, args['setup_path']))
-                    print 'Get distribution args from %s ...' % unpackpath
-                    try: get_package_args(args)
-                    except:
-                        self.logobj.in_except(pkgname,
-                                              '"setup.py dump" failed')
-                        continue
 
-                fix_args(args, pkgname)
+                try: get_package_args(args, dist)
+                except:
+                    self.logobj.in_except(pkgname, 'Get package args failed')
+                    continue
 
-                # Generate package from args and options.
                 try:
                     self.pkgsys.setup_args(args)
                 except:
