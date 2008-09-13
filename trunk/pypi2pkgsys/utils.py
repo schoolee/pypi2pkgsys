@@ -9,13 +9,15 @@ import os.path
 def ensure_dir(dir):
     if not os.path.isdir(dir): os.makedirs(dir)
 
-def smart_write(fpath, content):
-    if os.path.isfile(fpath) or os.path.islink(fpath):
-        f = file(fpath)
+def smart_write(output, template, args):
+    tf = open(template); tmpl = tf.read(); tf.close()
+    content = tmpl % args
+    if os.path.isfile(output) or os.path.islink(fpath):
+        f = open(output)
         orig_content = f.read()
         f.close()
         if orig_content == content: return False
-    f = file(fpath, 'w')
+    f = open(output, 'w')
     f.write(content)
     f.close()
     return True
