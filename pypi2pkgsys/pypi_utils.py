@@ -121,7 +121,8 @@ class pypilog(object):
 
     def in_except(self, pkgname, msg):
         exc_value = sys.exc_info()[1]
-        print '%s: %s: %s' % (pkgname, msg, exc_value)
+        msg = '%s: %s' % (msg, exc_value)
+        print '%s: %s' % (pkgname, msg)
         if self.log_path is None: return
         self._acq_lock()
         # Update it in the protection of lock.
