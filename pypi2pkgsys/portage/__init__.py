@@ -27,7 +27,6 @@ class PkgSysPortage(PackageSystem):
             ['--portage-distfiles', '--portage-dir'])
 
     def setup_args(self, args):
-        args['self'] = sys.argv[0]
         if args['license'] != None and args['license'] != '':
             args['license'] = LicenseConvert(args['name'], args['license'])
         elif 'classifiers' in args and args['classifiers'] is not None:
@@ -71,7 +70,7 @@ class PkgSysPortage(PackageSystem):
         ebuild_dir = os.path.join(args['--portage-dir'],
                                   NameConvert(args['name']))
         ebuild_path = os.path.join(ebuild_dir, ebuild_fn)
-        for pkgtype in ['setup.py', 'single']:
+        for pkgtype in ['setup.py', 'single.py']:
             if args['pkgtype'] == pkgtype:
                 args['template'] = os.path.join('portage', '%s.tmpl' % pkgtype)
                 break
