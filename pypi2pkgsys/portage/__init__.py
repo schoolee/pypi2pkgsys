@@ -1,5 +1,5 @@
-# Copyright (C) 2008, Charles Wang <charlesw1234@163.com>
-# Author: Charles Wang <charlesw1234@163.com>
+# Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
+# Author: Charles Wang <charlesw123456@gmail.com>
 
 import glob
 import os.path
