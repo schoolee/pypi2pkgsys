@@ -4,6 +4,7 @@
 
 import os.path
 import popen2
+import posixfile
 import re
 import shutil
 import sys
@@ -30,20 +31,116 @@ pkg2license['qpy'] = 'BSD'
 pkg2license['Quixote'] = 'CNRI-QUIXOTE-2.4'
 pkg2license['pytz'] = 'MIT'
 
-broken = {}
-broken_file = file(os.path.join(patchdir, 'broken.txt'))
-ln = broken_file.readline()
-while ln:
-    name, value = ln.split('=', 1)
-    name = name.strip(); value = value.strip()
-    broken[name] = value
-    ln = broken_file.readline()
-broken_file.close()
-del(broken_file)
-del(ln)
+class pypilog(object):
+    lockpath = '/var/lock/pypi2pkgsys.log.lock'
+    okvalue = 'OK!'
+    logsep = '================================'
+    def __init__(self, log_path):
+        self.log_path = log_path
+        if self.log_path is not None:
+            if not os.path.isfile(log_path):
+                if os.path.exists(log_path): os.remove(log_path)
+                shutil.copyfile(os.path.join(patchdir, 'pypi2pkgsys.log'),
+                                log_path)
+            self.load_from_file()
 
-def check_broken(pkgname):
-    if pkgname in broken: raise RuntimeError, broken[pkgname]
+    def check_update(self):
+        curstat = os.stat(self.log_path)
+        return self.st_mtime >= curstat.st_mtime
+
+    def load_from_file(self):
+        logfp = open(self.log_path)
+        curstat = os.stat(self.log_path)
+        self.st_mtime = curstat.st_mtime
+        self.pkginfo_map = {}; self.tmpfailed_map = {}
+        # Load self.pkginfo_map
+        ln = logfp.readline()
+        while ln and ln.strip() != self.logsep:
+            krepr, vrepr = ln.split()
+            k = eval(krepr); v = eval(vrepr)
+            self.pkginfo_map[k] = v
+            ln = logfp.readline()
+        # Load self.tmpfailed_map
+        if ln: ln = logfp.readline()
+        curkey = None; curlist = []
+        while ln and ln.strip() != self.logsep:
+            if ln[0] != '\t':
+                if curkey != None and curlist != []:
+                    self.tmpfailed_map[curkey] = curlist
+                curkey = eval(ln.strip())
+                curlist = []
+            else:
+                curlist.append(eval(ln.strip()))
+            ln = logfp.readline()
+        if curkey != None and curlist != []:
+            self.tmpfailed_map[curkey] = curlist
+        # No further content.
+        logfp.close()
+
+    def save_to_file(self):
+        # Lock must be acquired.
+        logfp = open(self.log_path, 'w')
+        karr = self.pkginfo_map.keys(); karr.sort()
+        for k in karr: logfp.write('%r\t%r\n' % (k, self.pkginfo_map[k]))
+        logfp.write(self.logsep + '\n')
+        karr = self.tmpfailed_map.keys(); karr.sort()
+        for k in karr:
+            logfp.write('%r\n' % k)
+            for msg in self.tmpfailed_map[k]:
+                logfp.write('\t%r\n', msg)
+        logfp.close()
+        curstat = os.stat(self.log_path)
+        self.st_mtime = curstat.st_mtime
+
+    def check_broken(self, pkgname):
+        if self.log_path is not None: return
+        if not self.check_update(): self.load_from_file()
+        if pkgname not in self.pkginfo_map: return
+        if self.pkginfo_map[pkgname] == self.okvalue: return
+        print '%s: masked: %s' % (pkgname, self.pkginfo_map[pkgname])
+        raise RuntimeError
+
+    def pkgname_ok(self, pkgname):
+        print '%s: %s' % (pkgname, self.okvalue)
+        if self.log_path is None: return
+        lock = self._ack_lock()
+        # Update it in the protection of lock.
+        if not self.check_update(): self.load_from_file()
+        self.pkginfo_map[pkgname] = self.okvalue
+        if pkgname in self.tmpfailed_map: del(self.tmpfailed_map[pkgname])
+        self.save_to_file()
+        self._rel_lock(lock)
+
+    def in_except(self, pkgname, msg):
+        exc_value = sys.exc_info()[1]
+        print '%s: %s: %s' % (pkgname, msg, exc_value)
+        if self.log_path is None: return
+        lock = self._ack_lock()
+        # Update it in the protection of lock.
+        if not self.check_update(): self.load_from_file()
+        if pkgname in self.pkginfo_map:
+            if self.pkginfo_map[pkgname] == self.okvalue:
+                if pkgname in self.tmpfailed_map:
+                    self.tmpfailed_map[pkgname].append(msg)
+                else:
+                    self.tmpfailed_map[pkgname] = [msg]
+            else:
+                self.pkginfo_map[pkgname] = msg
+        else:
+            self.pkginfo_map[pkgname] = msg
+        self.save_to_file()
+        self._rel_lock(lock)
+
+    def _ack_lock(self):
+        lock = posixfile.open(self.lockpath, 'w')
+        if lock.lock('w?'):
+            print 'Waiting the lock: ', self.lockpath
+            lock.lock('w|')
+        return lock
+
+    def _rel_lock(self, lock):
+        lock.lock('u')
+        lock.close()
 
 def reqstr2obj(reqstr):
     return list(parse_requirements([reqstr]))[0]
@@ -68,13 +165,6 @@ def reqmap_add(reqmap, reqobj):
     name = reqobj.project_name
     if name not in reqmap: reqmap[name] = reqobj
     reqmap[name] = reqobj_combine(reqobj, reqmap[name])
-
-def in_except(logfp, pkgname, prompt):
-    exc_value = sys.exc_info()[1]
-    print '%s: %s: %s' % (pkgname, prompt, exc_value)
-    if logfp is not None:
-        logfp.write('%s = %s: %s\n' % (pkgname, prompt, exc_value))
-        logfp.flush()
 
 def smart_archive(args, dist, unpackdir):
     # Set pkgpath, pkgfile, pkgdir, unpackpath, pkgtype.
@@ -151,7 +241,7 @@ def smart_archive(args, dist, unpackdir):
 
 def fix_setup(setup_path):
     modified = False; add_import = False
-    setup_fp = file(setup_path)
+    setup_fp = open(setup_path)
     linearr = setup_fp.read().splitlines(True)
     reslinearr = []
     for line in linearr:
@@ -176,7 +266,7 @@ def fix_setup(setup_path):
             line = line.replace('distutils.core', 'setuptools')
         reslinearr.append(line)
     if modified or add_import:
-        setup_fp = file(setup_path, 'w')
+        setup_fp = open(setup_path, 'w')
         if add_import: setup_fp.write('import setuptools\n')
         setup_fp.write(''.join(reslinearr))
         setup_fp.close()
