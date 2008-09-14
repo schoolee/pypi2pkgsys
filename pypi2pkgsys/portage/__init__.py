@@ -9,14 +9,14 @@ import sys
 import portage
 from portage.manifest import Manifest
 
-from pypi2pkgsys.PackageSystem import PackageSystem
+from pypi2pkgsys.package_system import package_system
 from pypi2pkgsys.utils import ensure_dir
 from pypi2pkgsys.portage.utils import *
 
-class PkgSysPortage(PackageSystem):
+class pkgsys_portage(package_system):
     pkgsysname = 'portage'
     def __init__(self):
-        PackageSystem.__init__(self)
+        package_system.__init__(self)
 
     def init_options(self, options):
         options['--portage-distfiles'] = portage.settings['DISTDIR']

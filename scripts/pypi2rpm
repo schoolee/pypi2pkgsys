@@ -5,8 +5,8 @@
 
 import sys
 
-from pypi2pkgsys.pypi2packages import PYPI2Package
-from pypi2pkgsys.rpm import PkgSysRPM as PackageSystem
+from pypi2pkgsys.pypi2packages import pypi2package
+from pypi2pkgsys.rpm import pkgsys_rpm as package_system
 
-packager = PYPI2Package(PackageSystem, sys.argv)
+packager = pypi2package(package_syetem, sys.argv)
 packager.run()

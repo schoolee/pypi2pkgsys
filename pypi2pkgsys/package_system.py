@@ -1,6 +1,6 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 
-class PackageSystem(object):
+class package_system(object):
     def __init__(self):
         pass
 
