@@ -6,6 +6,14 @@ import filecmp
 import os
 import os.path
 
+def get_bool_opt(stropt):
+    stropt = stropt.lower()
+    for strvalue, boolvalue in (('false', False), ('no', False),
+                                ('true', True), ('yes', True)):
+        if stropt == strvalue: return boolvalue
+        if stropt == strvalue[0]: return boolvalue
+    raise RuntimeError, 'Unsupport bool value: %s' % stropt
+
 def ensure_dir(dir):
     if not os.path.isdir(dir): os.makedirs(dir)
 

@@ -1,5 +1,6 @@
 # Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
 # Author: Charles Wang <charlesw123456@gmail.com>
+# License: BSD
 
 import copy
 import os
@@ -12,59 +13,13 @@ from pypi2pkgsys.utils import *
 from pypi2pkgsys.pypi_utils import *
 from pypi2pkgsys.pypi_objects import *
 
-def get_bool_opt(stropt):
-    stropt = stropt.lower()
-    for strvalue, boolvalue in (('false', False), ('no', False),
-                                ('true', True), ('yes', True)):
-        if stropt == strvalue: return boolvalue
-        if stropt == strvalue[0]: return boolvalue
-    raise RuntimeError, 'Unsupport bool value: %s' % stropt
-
 class pypi2package(object):
     def __init__(self, package_system, argv):
         self.arg0 = argv[0]
 
         self.pkgsys = package_system()
 
-        self.options = {}
-        for name, value in config.items('scheme-%s' % self.pkgsys.pkgsysname):
-            self.options['--%s' % name] = value
-
-        self.pkgsys.init_options(self.options)
-
-        optname = None
-        self.reqarglist = []
-
-        for arg in argv[1:]:
-            if optname is not None:
-                self.options[optname] = arg
-                optname = None
-            elif arg in self.options:
-                optname = arg
-            elif arg[:9] == '--scheme-':
-                secname = 'scheme-%s-%s' % (self.pkgsys.pkgsysname, arg[9:])
-                if not config.has_section(secname):
-                    raise RuntimeError, \
-                        'The section %s is not present.' % secname
-                for name, value in config.items(secname):
-                    self.options['--%s' % name] = value
-            else:
-                self.reqarglist.append(arg)
-
-        ensure_dir(self.options['--unpack-dir'])
-        if self.options['--cache-root'] != '':
-            # For the cache saving, download-dir has to be reset.
-            self.options['--download-dir'] = \
-                os.path.join(self.options['--cache-root'], 'downloads')
-            self.options['--cache-simple'] = \
-                os.path.join(self.options['--cache-root'], 'simple')
-            ensure_dir(self.options['--cache-simple'])
-        ensure_dir(self.options['--download-dir'])
-
-        for bopt in ['--skip-broken', '--deps']:
-            self.options[bopt] = get_bool_opt(self.options[bopt])
-
-        self.pkgsys.finalize_options(self.options)
+        self.options, self.reqarglist = parse_argv(argv, self.pkgsys)
 
         if self.options['--log-path'] == '': self.logobj = pypilog(None)
         else: self.logobj = pypilog(self.options['--log-path'])
