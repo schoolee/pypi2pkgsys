@@ -71,15 +71,9 @@ class pypi2package(object):
 
     def run(self):
         # Prepare for iterations.
-        pkgreqmap = {}
-        matchlist = []
-        for reqarg in self.reqarglist:
-            if '*' in reqarg or '?' in reqarg: matchlist.append(reqarg)
-            else: reqmap_add(pkgreqmap, reqstr2obj(reqarg))
-        if matchlist != []:
-            for reqstr in pypi_match(self.logobj, matchlist,
-                                     self.options['--url']):
-                reqmap_add(pkgreqmap, reqstr2obj(reqstr))
+        pkgreqmap = reqmap()
+        for reqarg in self.reqarglist: pkgreqmap.append_arg(reqarg)
+        pkgreqmap.resolve_matchlist(self.logobj, self.options['--url'])
 
         pkgidx = PackageIndex(index_url = self.options['--url'])
 
@@ -87,14 +81,15 @@ class pypi2package(object):
         distlist = []
         ok_packages = []
         while len(pkgreqmap) > 0:
-            new_pkgreqmap = {}
-            for pkgreqobj in pkgreqmap.values():
+            new_pkgreqmap = reqmap()
+            for idx, total, pkgreqobj in pkgreqmap.reqobj_seq():
+
                 pkgname = pkgreqobj.project_name
                 if pkgname in ok_packages: continue
                 ok_packages.append(pkgname)
                 reqstr = str(pkgreqobj)
 
-                print
+                print '\n======== %s: %d/%d ========' % (pkgname, idx, total)
 
                 if self.options['--skip-broken']:
                     try: self.logobj.check_broken(pkgname)
@@ -177,7 +172,7 @@ class pypi2package(object):
                     for k in args['extras_require'].keys():
                         reqstrlist.extend(args['extras_require'][k])
                     for reqstr in reqstrlist:
-                        reqmap_add(new_pkgreqmap, reqstr2obj(reqstr))
+                        new_pkgreqmap.add(reqstr2obj(reqstr))
 
                 self.logobj.pkgname_ok(pkgname)
                 if self.options['--cache-root'] != '':
