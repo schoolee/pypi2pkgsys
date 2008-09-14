@@ -3,11 +3,16 @@
 # License: BSD
 
 import fcntl
+import fnmatch
 import hashlib
 import os
 import os.path
+import re
 import shutil
 import sys
+import urllib2
+from UserDict import UserDict
+from pypi2pkgsys.pypi_utils import reqstr2obj
 
 class pypibase(object):
     def __init__(self, lockpath):
@@ -101,7 +106,7 @@ class pypilog(pypibase):
         # Update it in the protection of lock.
         if not self.check_update(): self.load_from_file()
         self.pkginfo_map[pkgname] = self.okvalue
-        if pkgname in self.tmpfailed_map: del(self.tmpfailed_map[pkgname])
+        #if pkgname in self.tmpfailed_map: del(self.tmpfailed_map[pkgname])
         self.save_to_file()
         self.unlock()
 
@@ -168,3 +173,62 @@ class pypicache(pypibase):
         sindex.write('</body></html>\n')
 
         self.unlock()
+
+class reqmap(UserDict):
+    valid_cr = re.compile('^[\w\d\-\_\.]+$')
+    def __init__(self):
+        UserDict.__init__(self)
+        self.matchlist = []
+
+    def append_arg(self, reqarg):
+        if '*' in reqarg or '?' in reqarg: self.matchlist.append(reqarg)
+        else: self.add(reqstr2obj(reqarg))
+
+    def resolve_matchlist(self, logobj, pkgidx_url):
+        if self.matchlist == []: return
+        prefix = "<a href='"; sep = "/'>"; suffix = "</a><br/>"
+        sockf = urllib2.urlopen(pkgidx_url)
+        ln = sockf.readline()
+        while ln:
+            ln = ln.strip()
+            lnidx = ln.find(sep)
+            if lnidx > 0 and ln.startswith(prefix) and ln.endswith(suffix):
+                s0 = ln[len(prefix):lnidx]
+                s1 = ln[lnidx + len(sep): -len(suffix)]
+                if s0 == s1: # A valid PyPI package name is recognized.
+                    for match in self.matchlist:
+                        if fnmatch.fnmatch(s0, match):
+                            if self.valid_cr.match(s0) is None:
+                                logobj.in_except(s0, 'Invalid name')
+                            else:
+                                self.add(reqstr2obj(s0))
+                            break
+            ln = sockf.readline()
+        sockf.close()
+        self.matchlist = []
+
+    def reqobj_combine(self, reqobj0, reqobj1):
+        if reqobj0.project_name != reqobj1.project_name:
+            raise RuntimeError, \
+                'Try to combine reqobj different project %s, %s.' %\
+                (reqobj0.project_name, reqobj1.project_name)
+        extras = reqobj0.extras
+        for e1 in reqobj1.extras:
+            if e1 not in extras: extras.append(e1)
+        extras = ','.join(extras)
+        if extras: extras = '[%s]' % extras
+        specs = [''.join(s) for s in reqobj0.specs]
+        for s1 in [''.join(s) for s in reqobj1.specs]:
+            if s1 not in specs: specs.append(s1)
+        specs = ','.join(specs)
+        return reqstr2obj('%s%s%s' % (reqobj0.project_name, extras, specs))
+
+    def add(self, reqobj):
+        name = reqobj.project_name
+        if name not in self: self[name] = reqobj
+        self[name] = self.reqobj_combine(reqobj, self[name])
+
+    def reqobj_seq(self):
+        klist = self.keys(); klist.sort()
+        for idx in xrange(len(klist)):
+            yield (idx, len(klist), self[klist[idx]])

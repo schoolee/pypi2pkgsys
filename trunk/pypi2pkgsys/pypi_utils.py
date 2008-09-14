@@ -2,13 +2,11 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: BSD
 
-import fnmatch
 import os.path
 import popen2
 import re
 import shutil
 import tarfile
-import urllib2
 import zipfile
 from pkg_resources import parse_requirements
 from setuptools.archive_util import unpack_archive
@@ -31,53 +29,8 @@ pkg2license['qpy'] = 'BSD'
 pkg2license['Quixote'] = 'CNRI-QUIXOTE-2.4'
 pkg2license['pytz'] = 'MIT'
 
-valid_cr = re.compile('^[\w\d\-\_\.]+$')
-def pypi_match(logobj, matchlist, url = 'http://pypi.python.org/simple'):
-    prefix = "<a href='"; sep = "/'>"; suffix = "</a><br/>"
-    result = []
-    sockf = urllib2.urlopen(url)
-    ln = sockf.readline()
-    while ln:
-        ln = ln.strip()
-        lnidx = ln.find(sep)
-        if lnidx > 0 and ln.startswith(prefix) and ln.endswith(suffix):
-            s0 = ln[len(prefix):lnidx]
-            s1 = ln[lnidx + len(sep): -len(suffix)]
-            if s0 == s1: # A valid PyPI package name is recognized.
-                for match in matchlist:
-                    if fnmatch.fnmatch(s0, match):
-                        if valid_cr.match(s0) is None:
-                            logobj.in_except(s0, 'Invalid name')
-                        else:
-                            result.append(s0)
-                        break
-        ln = sockf.readline()
-    sockf.close()
-    return result
-
 def reqstr2obj(reqstr):
     return list(parse_requirements([reqstr]))[0]
-
-def reqobj_combine(reqobj0, reqobj1):
-    if reqobj0.project_name != reqobj1.project_name:
-        raise RuntimeError, \
-            'Requirements for different project %s, %s can not be combined.' %\
-            (reqobj0.project_name, reqobj1.project_name)
-    extras = reqobj0.extras
-    for e1 in reqobj1.extras:
-        if e1 not in extras: extras.append(e1)
-    extras = ','.join(extras)
-    if extras: extras = '[%s]' % extras
-    specs = [''.join(s) for s in reqobj0.specs]
-    for s1 in [''.join(s) for s in reqobj1.specs]:
-        if s1 not in specs: specs.append(s1)
-    specs = ','.join(specs)
-    return reqstr2obj('%s%s%s' % (reqobj0.project_name, extras, specs))
-
-def reqmap_add(reqmap, reqobj):
-    name = reqobj.project_name
-    if name not in reqmap: reqmap[name] = reqobj
-    reqmap[name] = reqobj_combine(reqobj, reqmap[name])
 
 def smart_archive(args, dist, unpackdir):
     # Set pkgpath, pkgfile, pkgdir, unpackpath, pkgtype.
