@@ -10,6 +10,7 @@ from setuptools.package_index import PackageIndex
 from pypi2pkgsys import pkgroot, patchdir, config
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.pypi_utils import *
+from pypi2pkgsys.pypi_objects import *
 
 def get_bool_opt(stropt):
     stropt = stropt.lower()
@@ -22,15 +23,13 @@ def get_bool_opt(stropt):
 class PYPI2Package(object):
     def __init__(self, PackageSystem, argv):
         self.arg0 = argv[0]
-        self.options = { '--url' : 'http://pypi.python.org/simple',
-                         '--download-dir' : '/var/tmp/pypi/downloads',
-                         '--unpack-dir' : '/var/tmp/pypi/unpack',
-                         '--deps' : 'false',
-                         '--skip-broken' : 'true',
-                         '--use-log' : 'true',
-                         '--log-path' : '/var/tmp/pypi/pypi2pkgsys.log' }
 
         self.pkgsys = PackageSystem()
+
+        self.options = {}
+        for name, value in config.items('scheme-%s' % self.pkgsys.pkgsysname):
+            self.options['--%s' % name] = value
+
         self.pkgsys.init_options(self.options)
 
         optname = None
@@ -42,19 +41,32 @@ class PYPI2Package(object):
                 optname = None
             elif arg in self.options:
                 optname = arg
+            elif arg[:9] == '--scheme-':
+                secname = 'scheme-%s-%s' % (self.pkgsys.pkgsysname, args[9:])
+                if not config.has_section(secname):
+                    raise RuntimeError, \
+                        'The section %s is not present.' % secname
+                for name, value in config.items(secname):
+                    self.options['--%s' % name] = value
             else:
                 self.reqarglist.append(arg)
 
-        # Ensure the exists of the working directories.
-        map(lambda diropt: ensure_dir(self.options[diropt]),
-            ['--download-dir', '--unpack-dir'])
+        ensure_dir(self.options['--unpack-dir'])
+        if self.options['--cache-root'] != '':
+            # For the cache saving, download-dir has to be reset.
+            self.options['--download-dir'] = \
+                os.path.join(self.options['--cache-root'], 'downloads')
+            self.options['--cache-simple'] = \
+                os.path.join(self.options['--cache-root'], 'simple')
+            ensure_dir(self.options['--cache-simple'])
+        ensure_dir(self.options['--download-dir'])
 
-        for bopt in ['--skip-broken', '--deps', '--use-log']:
+        for bopt in ['--skip-broken', '--deps']:
             self.options[bopt] = get_bool_opt(self.options[bopt])
 
         self.pkgsys.finalize_options(self.options)
 
-        if not self.options['--use-log']: self.logobj = pypilog(None)
+        if self.options['--log-path'] == '': self.logobj = pypilog(None)
         else: self.logobj = pypilog(self.options['--log-path'])
 
     def run(self):
@@ -64,13 +76,15 @@ class PYPI2Package(object):
         for reqarg in self.reqarglist:
             if '*' in reqarg or '?' in reqarg: matchlist.append(reqarg)
             else: reqmap_add(pkgreqmap, reqstr2obj(reqarg))
-        for reqstr in pypi_match(self.logobj, matchlist,
-                                 self.options['--url']):
-            reqmap_add(pkgreqmap, reqstr2obj(reqstr))
+        if matchlist != []:
+            for reqstr in pypi_match(self.logobj, matchlist,
+                                     self.options['--url']):
+                reqmap_add(pkgreqmap, reqstr2obj(reqstr))
 
         pkgidx = PackageIndex(index_url = self.options['--url'])
 
         # Main loop.
+        distlist = []
         ok_packages = []
         while len(pkgreqmap) > 0:
             new_pkgreqmap = {}
@@ -166,7 +180,15 @@ class PYPI2Package(object):
                         reqmap_add(new_pkgreqmap, reqstr2obj(reqstr))
 
                 self.logobj.pkgname_ok(pkgname)
+                if self.options['--cache-root'] != '':
+                    distlist.append(dist)
 
                 # Process of a single package is finished.
 
             pkgreqmap = new_pkgreqmap
+
+        if self.options['--cache-root']:
+            cache = pypicache(self.options['--cache-root'],
+                              self.options['--cache-url'])
+            cache.add_packages(distlist)
+            del(cache)
