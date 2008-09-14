@@ -99,6 +99,12 @@ class pypilog(pypibase):
         print '%s: masked: %s' % (pkgname, self.pkginfo_map[pkgname])
         raise RuntimeError
 
+    def get_stats(self):
+        ok = 0
+        for v in self.pkginfo_map.values():
+            if v == self.okvalue: ok = ok + 1
+        return (ok, len(self.pkginfo_map))
+
     def pkgname_ok(self, pkgname):
         print '%s: %s' % (pkgname, self.okvalue)
         if self.log_path is None: return
