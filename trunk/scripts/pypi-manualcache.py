@@ -3,6 +3,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: BSD
 
+import os.path
+import shutil
 import sys
 from pkg_resources import Distribution
 from pypi2pkgsys.pypi_objects import pypicache
@@ -13,10 +15,13 @@ if len(sys.argv) < 4:
 
 cacheroot = sys.argv[1]
 cacheurl = sys.argv[2]
+downloads = os.path.join(cacheroot, 'downloads')
 distlist = []
 for arg in sys.argv[3:]:
     filename, distname = arg.split(',')
-    dist = Distribution.from_filename(filename, project_name = distname)
+    dlfname = os.path.join(downloads, os.path.basename(filename))
+    shutil.copyfile(filename, dlfname)
+    dist = Distribution(dlfname, None, project_name = distname)
     distlist.append(dist)
 cache = pypicache(cacheroot, cacheurl)
 cache.add_packages(distlist)
