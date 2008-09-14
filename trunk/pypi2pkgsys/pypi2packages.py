@@ -44,7 +44,8 @@ class pypi2package(object):
                 ok_packages.append(pkgname)
                 reqstr = str(pkgreqobj)
 
-                print '\n======== %s: %d/%d ========' % (pkgname, idx, total)
+                print '\n======== %s: %d/%d ========' % \
+                    (pkgname, idx + 1, total)
 
                 if self.options['--skip-broken']:
                     try: self.logobj.check_broken(pkgname)
