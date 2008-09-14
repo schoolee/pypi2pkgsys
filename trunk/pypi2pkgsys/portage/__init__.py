@@ -14,6 +14,7 @@ from pypi2pkgsys.utils import ensure_dir
 from pypi2pkgsys.portage.utils import *
 
 class PkgSysPortage(PackageSystem):
+    pkgsysname = 'portage'
     def __init__(self):
         PackageSystem.__init__(self)
 
