@@ -38,7 +38,8 @@ setup(name = 'pypi2pkgsys',
       url = 'http://code.google.com/p/pypi2pkgsys/',
       packages = find_packages(),
       scripts = map(lambda s: os.path.join('scripts', s),
-                    ['pypi2portage', 'pypi2rpm', 'pypi2dpkg']),
+                    ['pypi2portage', 'pypi2dpkg', 'pypi2rpm']) + \
+          glob.glob(os.path.join('scripts', '*.py')),
       package_data = { 'pypi2pkgsys' : \
                            [os.path.join('patches', 'index.ini'),
                             os.path.join('patches', 'pypi2pkgsys.log'),
