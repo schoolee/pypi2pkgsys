@@ -172,7 +172,6 @@
 'ETSDevTools'	'Get package args failed: ImportError: No module named numpy.distutils.core'
 'Enable'	'Get package args failed: ImportError: No module named numpy.distutils.core'
 'Gajim'	'Unpack Gajim failed: Unsupported archive type'
-'GrassKnoll'	'Download GrassKnoll failed: None'
 'GrassyKnoll'	'OK!'
 'Mako'	'OK!'
 'Mayavi'	'Get package args failed: ImportError: No module named numpy.distutils'
