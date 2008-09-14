@@ -20,11 +20,11 @@ def get_bool_opt(stropt):
         if stropt == strvalue[0]: return boolvalue
     raise RuntimeError, 'Unsupport bool value: %s' % stropt
 
-class PYPI2Package(object):
-    def __init__(self, PackageSystem, argv):
+class pypi2package(object):
+    def __init__(self, package_system, argv):
         self.arg0 = argv[0]
 
-        self.pkgsys = PackageSystem()
+        self.pkgsys = package_system()
 
         self.options = {}
         for name, value in config.items('scheme-%s' % self.pkgsys.pkgsysname):
@@ -42,7 +42,7 @@ class PYPI2Package(object):
             elif arg in self.options:
                 optname = arg
             elif arg[:9] == '--scheme-':
-                secname = 'scheme-%s-%s' % (self.pkgsys.pkgsysname, args[9:])
+                secname = 'scheme-%s-%s' % (self.pkgsys.pkgsysname, arg[9:])
                 if not config.has_section(secname):
                     raise RuntimeError, \
                         'The section %s is not present.' % secname
