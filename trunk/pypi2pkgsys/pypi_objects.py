@@ -7,13 +7,14 @@ import hashlib
 import os
 import os.path
 import shutil
+import sys
 
 class pypibase(object):
     def __init__(self, lockpath):
         self.lockfd = os.open(lockpath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
 
     def __del__(self):
-        self.lockfd.close()
+        os.close(self.lockfd)
 
     def lock(self):
         try: fcntl.lockf(self.lockfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -86,7 +87,7 @@ class pypilog(pypibase):
         self.st_mtime = curstat.st_mtime
 
     def check_broken(self, pkgname):
-        if self.log_path is not None: return
+        if self.log_path is None: return
         if not self.check_update(): self.load_from_file()
         if pkgname not in self.pkginfo_map: return
         if self.pkginfo_map[pkgname] == self.okvalue: return
@@ -146,7 +147,7 @@ class pypicache(pypibase):
             distdir = os.path.join(self.simple_root, dist.project_name)
             if not os.path.isdir(distdir): os.mkdir(distdir)
             distindex = open(os.path.join(distdir, 'index.html'), 'w')
-            distindex.write(pkgindx.format % \
+            distindex.write(self.pkgindex_format % \
                                 { 'project_name' : dist.project_name,
                                   'downloads_url' : self.downloads_url,
                                   'filename' : os.path.basename(dist.location),
