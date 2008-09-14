@@ -32,6 +32,7 @@ class pypibase(object):
 
 class pypilog(pypibase):
     okvalue = 'OK!'
+    manualvalue = 'MANUAL!'
     logsep = '================================'
     def __init__(self, log_path):
         pypibase.__init__(self, '/var/lock/pypi2pkgsys.log.lock')
@@ -96,14 +97,18 @@ class pypilog(pypibase):
         if not self.check_update(): self.load_from_file()
         if pkgname not in self.pkginfo_map: return
         if self.pkginfo_map[pkgname] == self.okvalue: return
-        print '%s: masked: %s' % (pkgname, self.pkginfo_map[pkgname])
+        if self.pkginfo_map[pkgname] == self.manualvalue:
+            print '%s: MANUAL!' % (pkgname)
+        else:
+            print '%s: masked: %s' % (pkgname, self.pkginfo_map[pkgname])
         raise RuntimeError
 
     def get_stats(self):
-        ok = 0
+        ok = 0; manual = 0
         for v in self.pkginfo_map.values():
             if v == self.okvalue: ok = ok + 1
-        return (ok, len(self.pkginfo_map))
+            elif v == self.manualvalue: manual = manual + 1
+        return (ok, manual, len(self.pkginfo_map))
 
     def pkgname_ok(self, pkgname):
         print '%s: %s' % (pkgname, self.okvalue)
@@ -130,6 +135,8 @@ class pypilog(pypibase):
                     self.tmpfailed_map[pkgname].append(msg)
                 else:
                     self.tmpfailed_map[pkgname] = [msg]
+            elif self.pkginfo_map[pkgname] == self.manualvalue:
+                pass # Do not touch the pkg whose ebuild is written manually.
             else:
                 self.pkginfo_map[pkgname] = msg
         else:
