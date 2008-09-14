@@ -11,7 +11,8 @@ import zipfile
 from pkg_resources import parse_requirements
 from setuptools.archive_util import unpack_archive
 
-from pypi2pkgsys import patchdir
+from pypi2pkgsys import patchdir, config
+from pypy2pkgsys.utils import get_bool_opt
 
 pkg2license = {}
 pkg2license['Adaptation'] = 'UNKNOWN'
@@ -28,6 +29,45 @@ pkg2license['meld'] = 'ZPL'
 pkg2license['qpy'] = 'BSD'
 pkg2license['Quixote'] = 'CNRI-QUIXOTE-2.4'
 pkg2license['pytz'] = 'MIT'
+
+def parse_argv(argv, pkgsys):
+    options = {}
+    for name, value in config.items('scheme-%s' % pkgsys.pkgsysname):
+        options['--%s' % name] = value
+
+    pkgsys.init_options(options)
+
+    optname = None
+    reqarglist = []
+
+    for arg in argv[1:]:
+        if optname is not None: options[optname] = arg; optname = None
+        elif arg in options: optname = arg
+        elif arg[:9] == '--scheme-':
+            secname = 'scheme-%s-%s' % (pkgsys.pkgsysname, arg[9:])
+            if not config.has_section(secname):
+                raise RuntimeError, 'The section %s is not present.' % secname
+            for name, value in config.items(secname):
+                options['--%s' % name] = value
+        else:
+            reqarglist.append(arg)
+
+    ensure_dir(options['--unpack-dir'])
+    if options['--cache-root'] != '':
+        # For the cache saving, download-dir has to be reset.
+        options['--download-dir'] = \
+            os.path.join(options['--cache-root'], 'downloads')
+        options['--cache-simple'] = \
+            os.path.join(options['--cache-root'], 'simple')
+        ensure_dir(options['--cache-simple'])
+    ensure_dir(options['--download-dir'])
+
+    for bopt in ['--skip-broken', '--deps']:
+        options[bopt] = get_bool_opt(options[bopt])
+
+    pkgsys.finalize_options(options)
+
+    return options, reqarglist
 
 def reqstr2obj(reqstr):
     return list(parse_requirements([reqstr]))[0]
