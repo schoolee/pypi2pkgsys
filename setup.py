@@ -10,18 +10,27 @@ from setuptools import setup, find_packages
 
 version = '0.0.6'
 
-setup(name = 'pypi2pkgsys',
-      version = version,
-      description = 'Generate package files(gentoo ebuild) for selected PyPI packages',
-      long_description = """Generate package files from the selected PyPI packages.
+long_desc = \
+    """Generate package files from PyPI index.
 
 Now only ebuild for gentoo is generated. spec for rpm-base distribution,
 dpkg for dpkg-base distribution will be added in future.
 
+Many features are provided:
+* Wildcard is permitted in package names.
+* Cache is enabled by default so we shall not have to wait for the network.
+* Manage log automatically, it can record the fails so we can skip them.
+
+Links:
 * News: http://code.google.com/p/pypi2pkgsys/wiki/News
 * Main: http://code.google.com/p/pypi2pkgsys/wiki/Main
 * Usage: http://code.google.com/p/pypi2pkgsys/wiki/Usage
-""",
+"""
+
+setup(name = 'pypi2pkgsys',
+      version = version,
+      description = 'Generate package files(gentoo ebuild) from PyPI index.',
+      long_description = long_desc,
       keywords = 'PyPI distutils setuptools package management',
       license = 'BSD',
       author = 'Charles Wang',
@@ -32,7 +41,6 @@ dpkg for dpkg-base distribution will be added in future.
                     ['pypi2portage', 'pypi2rpm', 'pypi2dpkg']),
       package_data = { 'pypi2pkgsys' : \
                            [os.path.join('patches', 'index.ini'),
-                            os.path.join('patches', 'broken.txt'),
                             os.path.join('patches', 'pypi2pkgsys.log'),
                             os.path.join('patches', '*.patch'),
                             os.path.join('portage', '*.tmpl')] },
