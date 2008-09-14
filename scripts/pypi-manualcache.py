@@ -20,6 +20,7 @@ distlist = []
 for arg in sys.argv[3:]:
     filename, distname = arg.split(',')
     dlfname = os.path.join(downloads, os.path.basename(filename))
+    print 'Copy %s %s ...' % (filename, dlfname)
     shutil.copyfile(filename, dlfname)
     dist = Distribution(dlfname, None, project_name = distname)
     distlist.append(dist)
