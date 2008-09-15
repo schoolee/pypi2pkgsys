@@ -1,6 +1,6 @@
---- fixsetup.py.orig	2008-09-15 11:02:48.000000000 +0800
-+++ fixsetup.py	2008-09-15 11:04:27.000000000 +0800
-@@ -0,0 +1,44 @@
+--- fixsetup.py.orig	2008-09-15 23:24:01.000000000 +0800
++++ fixsetup.py	2008-09-15 23:27:50.000000000 +0800
+@@ -0,0 +1,47 @@
 +#!/usr/bin/python
 +
 +import glob
@@ -30,6 +30,9 @@
 +
 +fixfiles.append('setup.py')
 +fixfiles.extend(glob.glob(os.path.join('testSuite', '*.py')))
++for d in ['examples', 'frames', 'pimaker', 'sources']:
++    fixfiles.extend(glob.glob(os.path.join(d, '*.frame')))
++    fixfiles.extend(glob.glob(os.path.join(d, '*.atg')))
 +
 +restr = '(\\s*from\\s+)(' + '|'.join(modlist) + ')(\\s+import\\s+)'
 +reobj = re.compile(restr)
@@ -46,7 +49,7 @@
 +    ffp.write(output)
 +    ffp.close()
 --- setupInfo.py.orig	2007-12-19 18:47:28.000000000 +0800
-+++ setupInfo.py	2008-09-15 11:02:48.000000000 +0800
++++ setupInfo.py	2008-09-15 23:24:01.000000000 +0800
 @@ -1,18 +1,33 @@
 +import os
 +import os.path
