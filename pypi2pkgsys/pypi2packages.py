@@ -101,6 +101,8 @@ class pypi2package(object):
                     os.system('(cd %s; patch -p0 < %s) > /dev/null' % \
                                   (unpackpath, patch))
                     self.pkgsys.end(True)
+                    if os.path.isfile(os.path.join(unpackpath, 'fixsetup.py')):
+                        os.system('(cd %s; python fixsetup.py)' % unpackpath)
 
                 self.pkgsys.begin('Get package args')
                 try: get_package_args(args, dist)
