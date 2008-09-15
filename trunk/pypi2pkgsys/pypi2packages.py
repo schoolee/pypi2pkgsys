@@ -21,8 +21,10 @@ class pypi2package(object):
 
         self.options, self.reqarglist = parse_argv(argv, self.pkgsys)
 
-        if self.options['--log-path'] == '': self.logobj = pypilog(None)
-        else: self.logobj = pypilog(self.options['--log-path'])
+        if self.options['--log-path'] == '':
+            self.logobj = pypilog(self.pkgsys, None)
+        else:
+            self.logobj = pypilog(self.pkgsys, self.options['--log-path'])
 
     def run(self):
         # Prepare for iterations.
@@ -32,6 +34,7 @@ class pypi2package(object):
 
         pkgidx = PackageIndex(index_url = self.options['--url'])
 
+        show_sepline = False
         # Main loop.
         distlist = []
         ok_packages = []
@@ -44,8 +47,11 @@ class pypi2package(object):
                 ok_packages.append(pkgname)
                 reqstr = str(pkgreqobj)
 
-                print '\n======== %s: %d/%d ========' % \
-                    (pkgname, idx + 1, total)
+                if show_sepline: self.pkgsys.sepline()
+                else: show_sepline = True
+
+                self.pkgsys.info('======== %s: %d/%d ========' % \
+                                     (pkgname, idx + 1, total))
 
                 if self.options['--skip-broken']:
                     try: self.logobj.check_broken(pkgname)
@@ -55,7 +61,7 @@ class pypi2package(object):
                 args = copy.copy(self.options)
                 args['self'] = self.arg0
 
-                print 'Downloading %s ...' % reqstr
+                self.pkgsys.begin('Downloading %s' % reqstr)
                 try:
                     dist = pkgidx.fetch_distribution(pkgreqobj,
                                                      self.options['--download-dir'],
@@ -63,18 +69,23 @@ class pypi2package(object):
                     if dist is None:
                         raise RuntimeError, 'None'
                 except:
+                    self.pkgsys.end(False)
                     self.logobj.in_except(pkgname,
                                           'Download %s failed' % reqstr)
                     continue
+                else:
+                    self.pkgsys.end(True)
 
-                print 'Unpacking ...', dist.location
+                self.pkgsys.begin('Unpacking %s' % dist.location)
                 try: smart_archive(args, dist, self.options['--unpack-dir'])
                 except:
+                    self.pkgsys.end(False)
                     self.logobj.in_except(pkgname, 'Unpack %s failed' % reqstr)
                     continue
+                else:
+                    self.pkgsys.end(True)
                 unpackpath = args['unpackpath']
 
-                print 'Processing ...', pkgname
                 for secname in ('%s-%s' % (dist.project_name, dist.version),
                                 dist.project_name):
                     if config.has_section(secname):
@@ -85,43 +96,61 @@ class pypi2package(object):
 
                 # Apply patches.
                 for patch in args['patches']:
-                    print 'Applying %s ...' % patch
+                    self.pkgsys.info('Applying %s ...' % patch)
                     os.system('(cd %s; patch -p0 < %s)' % \
                                   (unpackpath, os.path.join(patchdir, patch)))
 
+                self.pkgsys.begin('Get package args')
                 try: get_package_args(args, dist)
                 except:
+                    self.pkgsys.end(False)
                     self.logobj.in_except(pkgname, 'Get package args failed')
                     continue
+                else:
+                    self.pkgsys.end(True)
 
-                try:
-                    self.pkgsys.setup_args(args)
+                self.pkgsys.begin('Setup args')
+                try: self.pkgsys.setup_args(args)
                 except:
+                    self.pkgsys.end(False)
                     self.logobj.in_except(pkgname, 'pkgsys.setup_args failed')
                     continue
+                else:
+                    self.pkgsys.end(True)
 
-                ensure_dir(os.path.dirname(args['output']))
-                print 'Writing %s' % args['output']
-                if smart_write(args['output'],
-                               os.path.join(pkgroot, args['template']),
-                               args):
-                    updated = True
-                if smart_symlink(args['pkgpath'],
-                                 os.path.join(args['filedir'],
-                                              args['pkgfile'])):
-                    updated = True
-                if args['patches'] != []:
-                    ensure_dir(args['patchdir'])
-                    for patch in args['patches']:
-                        if smart_symlink(os.path.join(patchdir, patch),
-                                         os.path.join(args['patchdir'],
-                                                      patch)):
-                            updated = True
+                self.pkgsys.begin('Writing %s' % args['output'])
                 try:
-                    self.pkgsys.process(args)
+                    ensure_dir(os.path.dirname(args['output']))
+                    if smart_write(args['output'],
+                                   os.path.join(pkgroot, args['template']),
+                                   args):
+                        updated = True
+                    if smart_symlink(args['pkgpath'],
+                                     os.path.join(args['filedir'],
+                                                  args['pkgfile'])):
+                        updated = True
+                    if args['patches'] != []:
+                        ensure_dir(args['patchdir'])
+                        for patch in args['patches']:
+                            if smart_symlink(os.path.join(patchdir, patch),
+                                             os.path.join(args['patchdir'],
+                                                          patch)):
+                                updated = True
                 except:
+                    self.pkgsys.end(False)
+                    self.logobj.in_except(pkgname, 'write failed')
+                    continue
+                else:
+                    self.pkgsys.end(True)
+
+                self.pkgsys.begin('Postproess %s' % args['output'])
+                try: self.pkgsys.process(args)
+                except:
+                    self.pkgsys.end(False)
                     self.logobj.in_except(pkgname, 'process failed')
                     continue
+                else:
+                    self.pkgsys.end(True)
 
                 if self.options['--deps']:
                     reqstrlist = args['install_requires']
@@ -131,15 +160,15 @@ class pypi2package(object):
                         new_pkgreqmap.add(reqstr2obj(reqstr))
 
                 self.logobj.pkgname_ok(pkgname)
-                if self.options['--cache-root'] != '':
-                    distlist.append(dist)
+                if self.options['--cache-root'] != '': distlist.append(dist)
 
                 # Process of a single package is finished.
 
             pkgreqmap = new_pkgreqmap
 
         if self.options['--cache-root']:
-            cache = pypicache(self.options['--cache-root'],
+            cache = pypicache(self.pkgsys,
+                              self.options['--cache-root'],
                               self.options['--cache-url'])
             cache.add_packages(distlist)
             del(cache)

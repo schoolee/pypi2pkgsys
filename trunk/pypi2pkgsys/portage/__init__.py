@@ -8,6 +8,7 @@ import sys
 
 import portage
 from portage.manifest import Manifest
+from portage.output import EOutput
 
 from pypi2pkgsys.package_system import package_system
 from pypi2pkgsys.utils import ensure_dir
@@ -17,6 +18,20 @@ class pkgsys_portage(package_system):
     pkgsysname = 'portage'
     def __init__(self):
         package_system.__init__(self)
+        self.eout = EOutput()
+
+    def begin(self, msg):
+        self.eout.ebegin(msg)
+
+    def end(self, success_ornot):
+        if success_ornot: self.eout.eend(0)
+        else: self.eout.eend(1)
+
+    def info(self, msg):
+        self.eout.einfo(msg)
+
+    def error(self, msg):
+        self.eout.eerror(msg)
 
     def init_options(self, options):
         options['--portage-distfiles'] = portage.settings['DISTDIR']
@@ -83,7 +98,6 @@ class pkgsys_portage(package_system):
 
     def process(self, args):
         # Call ebuild ... digest
-        print 'ebuild %s manifest ...' % args['output']
         try:
             portage._doebuild_manifest_exempt_depend += 1
             pkgdir = os.path.dirname(args['output'])
