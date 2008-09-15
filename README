@@ -15,7 +15,9 @@ After some work, I found there are some PyPI module which is not standardized
 enough, and the ebuild on hand do some hack on it. I think the better way is
 to patch the original PyPI module to let it standardized.
 
-pypi2pkgsys is in early stage because there are some many packages in PyPI
+pypi2pkgsys is in early stage because there are so many packages in PyPI
 index. I shall update it step by step.
 
-Charles Wang <charlesw123456@gmail.com>
+PyPI page: http://pypi.python.org/pypi/pypi2pkgsys
+Homepage: http://code.google.com/p/pypi2pkgsys
+Email: <charlesw123456@gmail.com>
