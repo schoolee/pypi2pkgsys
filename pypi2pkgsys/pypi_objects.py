@@ -15,7 +15,8 @@ from UserDict import UserDict
 from pypi2pkgsys.pypi_utils import reqstr2obj
 
 class pypibase(object):
-    def __init__(self, lockpath):
+    def __init__(self, pkgsys, lockpath):
+        self.pkgsys = pkgsys
         self.lockfd = os.open(lockpath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
 
     def __del__(self):
@@ -24,7 +25,7 @@ class pypibase(object):
     def lock(self):
         try: fcntl.lockf(self.lockfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
-            print 'Waiting the lock: ', self.lockfp.name
+            self.pkgsys.info('Waiting the lock: ', self.lockfp.name)
             fcntl.lockf(self.lockfd, fcntl.LOCK_EX)
 
     def unlock(self):
@@ -34,8 +35,8 @@ class pypilog(pypibase):
     okvalue = 'OK!'
     manualvalue = 'MANUAL!'
     logsep = '================================'
-    def __init__(self, log_path):
-        pypibase.__init__(self, '/var/lock/pypi2pkgsys.log.lock')
+    def __init__(self, pkgsys, log_path):
+        pypibase.__init__(self, pkgsys, '/var/lock/pypi2pkgsys.log.lock')
         self.log_path = log_path
         if self.log_path is not None:
             if not os.path.isfile(log_path):
@@ -98,9 +99,10 @@ class pypilog(pypibase):
         if pkgname not in self.pkginfo_map: return
         if self.pkginfo_map[pkgname] == self.okvalue: return
         if self.pkginfo_map[pkgname] == self.manualvalue:
-            print '%s: MANUAL!' % (pkgname)
+            self.pkgsys.info('%s: MANUAL!' % pkgname)
         else:
-            print '%s: masked: %s' % (pkgname, self.pkginfo_map[pkgname])
+            self.pkgsys.error('%s: masked: %s' % (pkgname,
+                                                  self.pkginfo_map[pkgname]))
         raise RuntimeError
 
     def get_stats(self):
@@ -111,7 +113,7 @@ class pypilog(pypibase):
         return (ok, manual, len(self.pkginfo_map))
 
     def pkgname_ok(self, pkgname):
-        print '%s: %s' % (pkgname, self.okvalue)
+        self.pkgsys.info('%s: %s' % (pkgname, self.okvalue))
         if self.log_path is None: return
         self.lock()
         # Update it in the protection of lock.
@@ -124,7 +126,7 @@ class pypilog(pypibase):
     def in_except(self, pkgname, msg):
         exc_value = sys.exc_info()[1]
         msg = '%s: %s' % (msg, exc_value)
-        print '%s: %s' % (pkgname, msg)
+        self.pkgsys.error('%s: %s' % (pkgname, msg))
         if self.log_path is None: return
         self.lock()
         # Update it in the protection of lock.
@@ -149,8 +151,8 @@ class pypicache(pypibase):
 <a href='%(downloads_url)s/%(filename)s#md5=%(md5)s'>%(filename)s</a></br>
 </body></html>
 """
-    def __init__(self, cacheroot, cacheurl):
-        pypibase.__init__(self, '/var/lock/pypi2pkgsys.cache.lock')
+    def __init__(self, pkgsys, cacheroot, cacheurl):
+        pypibase.__init__(self, pkgsys, '/var/lock/pypi2pkgsys.cache.lock')
         self.simple_root = os.path.join(cacheroot, 'simple')
         self.downloads_url = cacheurl + '/downloads'
 

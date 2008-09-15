@@ -7,6 +7,7 @@ import os.path
 import shutil
 import sys
 from pkg_resources import Distribution
+from pypi2pkgsys.package_system import package_system
 from pypi2pkgsys.pypi_objects import pypicache
 
 if len(sys.argv) < 4:
@@ -24,6 +25,6 @@ for arg in sys.argv[3:]:
     shutil.copyfile(filename, dlfname)
     dist = Distribution(dlfname, None, project_name = distname)
     distlist.append(dist)
-cache = pypicache(cacheroot, cacheurl)
+cache = pypicache(package_system(), cacheroot, cacheurl)
 cache.add_packages(distlist)
 del(cache)
