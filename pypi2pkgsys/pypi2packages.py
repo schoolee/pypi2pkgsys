@@ -8,7 +8,7 @@ import os.path
 
 from setuptools.package_index import PackageIndex
 
-from pypi2pkgsys import pkgroot, patchdir, config
+from pypi2pkgsys import pkgroot, config
 from pypi2pkgsys.utils import *
 from pypi2pkgsys.pypi_utils import *
 from pypi2pkgsys.pypi_objects import *
@@ -86,19 +86,21 @@ class pypi2package(object):
                     self.pkgsys.end(True)
                 unpackpath = args['unpackpath']
 
-                for secname in ('%s-%s' % (dist.project_name, dist.version),
-                                dist.project_name):
-                    if config.has_section(secname):
-                        for name, value in config.items(secname):
-                            if name not in args: args[name] = value
+                config_secs = ['%s-%s' % (dist.project_name, dist.version),
+                               dist.project_name]
+
+                for secname in config_secs:
+                    for name, value in config.items(secname):
+                        if name not in args: args[name] = value
                 if not 'patches' in args: args['patches'] = []
                 else: args['patches'] = args['patches'].split()
 
                 # Apply patches.
-                for patch in args['patches']:
-                    self.pkgsys.info('Applying %s ...' % patch)
-                    os.system('(cd %s; patch -p0 < %s)' % \
-                                  (unpackpath, os.path.join(patchdir, patch)))
+                for patch in config.patches(config_secs):
+                    self.pkgsys.begin('Applying %s' % os.path.basename(patch))
+                    os.system('(cd %s; patch -p0 < %s) > /dev/null' % \
+                                  (unpackpath, patch))
+                    self.pkgsys.end(True)
 
                 self.pkgsys.begin('Get package args')
                 try: get_package_args(args, dist)
@@ -131,10 +133,10 @@ class pypi2package(object):
                         updated = True
                     if args['patches'] != []:
                         ensure_dir(args['patchdir'])
-                        for patch in args['patches']:
-                            if smart_symlink(os.path.join(patchdir, patch),
-                                             os.path.join(args['patchdir'],
-                                                          patch)):
+                        for patch in config.patches(config_secs):
+                            tgtpatch = os.path.join(args['patchdir'],
+                                                    os.path.basename(patch))
+                            if smart_symlink(patch, tgtpatch):
                                 updated = True
                 except:
                     self.pkgsys.end(False)

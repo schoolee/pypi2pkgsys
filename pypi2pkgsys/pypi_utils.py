@@ -11,7 +11,7 @@ import zipfile
 from pkg_resources import parse_requirements
 from setuptools.archive_util import unpack_archive
 
-from pypi2pkgsys import patchdir, config
+from pypi2pkgsys import config
 from pypi2pkgsys.utils import get_bool_opt, ensure_dir
 
 pkg2license = {}
