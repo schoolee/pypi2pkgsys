@@ -31,7 +31,10 @@ Many features are provided:
 Links:
 * News: http://code.google.com/p/pypi2pkgsys/wiki/News
 * Main: http://code.google.com/p/pypi2pkgsys/wiki/Main
-* Usage: http://code.google.com/p/pypi2pkgsys/wiki/Usage
+* Usage:
+  * http://code.google.com/p/pypi2pkgsys/wiki/Usage_pypi2portage
+  * http://code.google.com/p/pypi2pkgsys/wiki/Usage_logstats
+  * http://code.google.com/p/pypi2pkgsys/wiki/Usage_manualcache
 """
 
 setup(name = 'pypi2pkgsys',
