@@ -51,13 +51,13 @@ second scheme.
 A default scheme is provided for each package system, the default values of
 options are loaded from it.
 
-To access a option scheme, use '--scheme-*', the options in
+To access a option scheme, use '--scheme-[SUFFIX]', the options in
 [scheme-pkgsysname-suffix] will be used.
 
 == Command line ==
 
 Possible options for all of the three commands:
- * --scheme-\*: Choose the specified scheme.
+ * --scheme-[SUFFIX]: Choose the specified scheme.
  * --url: The url of the PyPI index.
  * --cache-root: The root directory of the local cache. If it is set to '', cache is disabled.
  * --cache-url: The access url of the local cache.
