@@ -15,7 +15,9 @@ scheme to access them without any remote network actions.
 
 == Command line ==
 
+{{{
 # pypi-manualcache.py CACHEROOT CACHEURL PKGFN,PKGNAME ...
+}}}
 
 The provided packages will be copied into CACHEROOT/downloads, and they can be
 accessed from CACHEURL/downloads/PKGFN. The PKGNAME is the package name for
@@ -23,4 +25,6 @@ the package file used in PyPI.
 
 == Example ==
 
+{{{
 # pypi-manualcache.py /var/www/localhost/htdocs/pypicache http://127.0.0.1/pypicache basemap-0.99.1.tar.gz,basemap athenaCL.tar.gz,athenaCL
+}}}
