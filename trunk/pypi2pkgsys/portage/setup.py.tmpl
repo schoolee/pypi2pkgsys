@@ -22,6 +22,10 @@ S=${WORKDIR}/${MY_PD}
 src_unpack() {
 	distutils_src_unpack
 	%(patchlist)s
+	if [ -f fixsetup.py ]; then
+		einfo 'Run fixsetup.py'
+		${python} fixsetup.py
+	fi
 }
 
 src_compile() {
