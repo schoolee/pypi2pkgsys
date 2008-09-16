@@ -101,6 +101,10 @@ def smart_archive(args, dist, unpackdir):
             elif len(fname) < len(setup_path): setup_path = fname
         return leading_dir, single_py, setup_path
 
+    def unpackpath_cleanup(unpackpath):
+        if os.path.islink(unpackpath): os.unlink(unpackpath)
+        elif os.path.exists(unpackpath): shutil.rmtree(unpackpath)
+
     args['pkgpath'] = dist.location
     args['pkgfile'] = os.path.basename(dist.location)
     leading_dir = None; single_py = None; setup_path = None
@@ -127,12 +131,12 @@ def smart_archive(args, dist, unpackdir):
         if dist.version == '': args['pkgdir'] = dist.project_name
         else: args['pkgdir'] = '%s-%s' % (dist.project_name, dist.version)
         args['unpackpath'] = os.path.join(unpackdir, args['pkgdir'])
-        shutil.rmtree(args['unpackpath'])
+        unpackpath_cleanup(args['unpackpath'])
         unpack_archive(dist.location, args['unpackpath'])
     else:
         args['pkgdir'] = leading_dir
         args['unpackpath'] = os.path.join(unpackdir, args['pkgdir'])
-        shutil.rmtree(args['unpackpath'])
+        unpackpath_cleanup(args['unpackpath'])
         unpack_archive(dist.location, unpackdir)
         if setup_path is not None:
             if setup_path == os.path.join(leading_dir, 'setup.py'):
