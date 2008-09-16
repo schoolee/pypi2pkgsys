@@ -1,6 +1,6 @@
---- fixsetup.py.orig	2008-09-15 23:24:01.000000000 +0800
-+++ fixsetup.py	2008-09-15 23:27:50.000000000 +0800
-@@ -0,0 +1,47 @@
+--- fixsetup.py.orig	2008-09-16 20:12:44.000000000 +0800
++++ fixsetup.py	2008-09-16 20:11:41.000000000 +0800
+@@ -0,0 +1,45 @@
 +#!/usr/bin/python
 +
 +import glob
@@ -13,21 +13,11 @@
 +pylist = glob.glob('*.py')
 +del(pylist[pylist.index('setup.py')])
 +del(pylist[pylist.index('fixsetup.py')])
++dirlist = ['documentation', 'examples', 'frames',
++           'pimaker', 'sources', 'testSuite']
 +
-+modlist = []
-+fixfiles = []
-+os.mkdir(todir)
-+for f in pylist:
-+    modlist.append(os.path.splitext(f)[0])
-+    tgtf = os.path.join(todir, f)
-+    os.rename(f, tgtf)
-+    fixfiles.append(tgtf)
-+
-+if not os.path.isfile(os.path.join(todir, '__init__.py')):
-+    inifile = open(os.path.join(todir, '__init__.py'), 'w')
-+    inifile.write('\n')
-+    inifile.close()
-+
++modlist = map(lambda py: os.path.splitext(py)[0], pylist)
++fixfiles = pylist[:]
 +fixfiles.append('setup.py')
 +fixfiles.extend(glob.glob(os.path.join('testSuite', '*.py')))
 +for d in ['examples', 'frames', 'pimaker', 'sources']:
@@ -36,7 +26,6 @@
 +
 +restr = '(\\s*from\\s+)(' + '|'.join(modlist) + ')(\\s+import\\s+)'
 +reobj = re.compile(restr)
-+
 +for ff in fixfiles:
 +    ffp = open(ff)
 +    output = ''
@@ -48,23 +37,19 @@
 +    ffp = open(ff, 'w')
 +    ffp.write(output)
 +    ffp.close()
++
++os.mkdir(todir)
++for f in pylist + dirlist:
++    os.rename(f, os.path.join(todir, f))
++
++if not os.path.isfile(os.path.join(todir, '__init__.py')):
++    inifile = open(os.path.join(todir, '__init__.py'), 'w')
++    inifile.write('\n')
++    inifile.close()
 --- setupInfo.py.orig	2007-12-19 18:47:28.000000000 +0800
-+++ setupInfo.py	2008-09-15 23:24:01.000000000 +0800
-@@ -1,18 +1,33 @@
-+import os
++++ setupInfo.py	2008-09-16 20:11:53.000000000 +0800
+@@ -1,18 +1,22 @@
 +import os.path
-+
-+def all_files(dirpath):
-+    result = []
-+    for entry in os.listdir(dirpath):
-+        entrypath = os.path.join(dirpath, entry)
-+        if os.path.isdir(entrypath): result.extend(all_files(entrypath))
-+        elif os.path.isfile(entrypath): result.append(entrypath)
-+    return result
-+
-+def data_dir(dirname):
-+    return (os.path.join('share', '%s-%s' % (name, version), dirname),
-+            all_files(dirname))
 +
 +name = 'CocoPy'
 +version = '1.1.0rc'
@@ -87,9 +72,11 @@
 -                      ( 'sources',       [ 'sources/*'       ] ),
 -                      ( 'testSuite',     [ 'testSuite/*'     ] ) ],
 +       'packages':[ 'cocopy' ],
-+       'data_files':map(lambda dirname: data_dir(dirname), 
-+                        ['documentation', 'examples', 'frames',
-+                         'pimaker', 'sources', 'testSuite']),
++       'package_data':{'cocopy' : map(lambda dn: os.path.join(dn, '*.*'),
++                                       ['documentation', 'examples',
++                                        os.path.join('examples', 'Calc'),
++                                        'frames', 'pimaker',
++                                        'sources', 'testSuite'])},
         'classifiers':[
                        'Development Status :: 4 - Beta',
                        'Environment :: Console',
