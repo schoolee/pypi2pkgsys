@@ -1,6 +1,6 @@
 --- fixsetup.py.orig	2008-09-17 07:20:13.000000000 +0800
-+++ fixsetup.py	2008-09-17 07:30:35.000000000 +0800
-@@ -0,0 +1,48 @@
++++ fixsetup.py	2008-09-17 07:45:19.000000000 +0800
+@@ -0,0 +1,53 @@
 +#!/usr/bin/python
 +
 +import glob
@@ -32,15 +32,13 @@
 +    if ff == 'Coco.py': output = output + '#!/usr/bin/python\n'
 +    ln = ffp.readline()
 +    while ln:
-+        ln = ln.strip('\r\n')
-+        output = output + reobj.sub('\\1cocopy.\\2\\3', ln) + '\n'
++        output = output + reobj.sub('\\1cocopy.\\2\\3', ln)
 +        ln = ffp.readline()
 +    ffp.close()
 +    ffp = open(ff, 'w')
 +    ffp.write(output)
 +    ffp.close()
 +
-+del(pylist[pylist.index('Coco.py')])
 +os.mkdir(todir)
 +for f in pylist + dirlist:
 +    os.rename(f, os.path.join(todir, f))
@@ -49,6 +47,13 @@
 +    inifile = open(os.path.join(todir, '__init__.py'), 'w')
 +    inifile.write('\n')
 +    inifile.close()
++
++if not os.path.isfile('Coco.py'):
++    scriptfile = open('Coco.py', 'w')
++    scriptfile.write('#!/usr/bin/python\n')
++    scriptfile.write('import sys; from cocopy.Coco import Coco\n')
++    scriptfile.write('Coco.main(sys.argv)\n')
++    scriptfile.close()
 --- setupInfo.py.orig	2007-12-19 18:47:28.000000000 +0800
 +++ setupInfo.py	2008-09-17 07:36:26.000000000 +0800
 @@ -1,18 +1,23 @@
