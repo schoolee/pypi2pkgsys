@@ -62,7 +62,7 @@ def parse_argv(argv, pkgsys):
         ensure_dir(options['--cache-simple'])
     ensure_dir(options['--download-dir'])
 
-    for bopt in ['--skip-broken', '--deps']:
+    for bopt in ['--skip-broken', '--deps', '--skip-logged']:
         options[bopt] = get_bool_opt(options[bopt])
 
     pkgsys.finalize_options(options)

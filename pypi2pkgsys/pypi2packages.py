@@ -30,7 +30,8 @@ class pypi2package(object):
         # Prepare for iterations.
         pkgreqmap = reqmap()
         for reqarg in self.reqarglist: pkgreqmap.append_arg(reqarg)
-        pkgreqmap.resolve_matchlist(self.logobj, self.options['--url'])
+        pkgreqmap.resolve_matchlist(self.logobj, self.options['--url'],
+                                    self.options['--skip-logged'])
 
         pkgidx = PackageIndex(index_url = self.options['--url'])
 
