@@ -25,7 +25,7 @@ class pypibase(object):
     def lock(self):
         try: fcntl.lockf(self.lockfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
-            self.pkgsys.info('Waiting the lock: ', self.lockfp.name)
+            self.pkgsys.info('Waiting the lock: ', self.lockfd.name)
             fcntl.lockf(self.lockfd, fcntl.LOCK_EX)
 
     def unlock(self):
