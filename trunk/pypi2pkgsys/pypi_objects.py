@@ -105,6 +105,11 @@ class pypilog(pypibase):
                                                   self.pkginfo_map[pkgname]))
         raise RuntimeError
 
+    def check_logged(self, pkgname):
+        if self.log_path is None: return
+        if not self.check_update(): self.load_from_file()
+        return pkgname in self.pkginfo_map
+
     def get_stats(self):
         ok = 0; manual = 0
         for v in self.pkginfo_map.values():
@@ -199,7 +204,7 @@ class reqmap(UserDict):
         if '*' in reqarg or '?' in reqarg: self.matchlist.append(reqarg)
         else: self.add(reqstr2obj(reqarg))
 
-    def resolve_matchlist(self, logobj, pkgidx_url):
+    def resolve_matchlist(self, logobj, pkgidx_url, skip_logged_ornot):
         if self.matchlist == []: return
         prefix = "<a href='"; sep = "/'>"; suffix = "</a><br/>"
         sockf = urllib2.urlopen(pkgidx_url)
@@ -215,6 +220,8 @@ class reqmap(UserDict):
                         if fnmatch.fnmatch(s0, match):
                             if self.valid_cr.match(s0) is None:
                                 logobj.in_except(s0, 'Invalid name')
+                            elif skip_logged_ornot and logobj.check_logged(s0):
+                                pass
                             else:
                                 self.add(reqstr2obj(s0))
                             break
