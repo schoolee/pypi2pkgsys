@@ -1,4 +1,3 @@
-'-skip-logged'	'Download -skip-logged failed: '
 '-sre.py'	'OK!'
 '4Suite'	'"setup.py dump" failed'
 '4Suite-XML'	'"setup.py dump" failed'
