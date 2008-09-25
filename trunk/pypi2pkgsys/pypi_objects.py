@@ -105,10 +105,11 @@ class pypilog(pypibase):
                                                   self.pkginfo_map[pkgname]))
         raise RuntimeError
 
-    def check_logged(self, pkgname):
-        if self.log_path is None: return
+    def check_logged(self, pypi_dirname):
+        if self.log_path is None: return False
         if not self.check_update(): self.load_from_file()
-        return pkgname in self.pkginfo_map
+        dist = reqstr2obj(pypi_dirname)
+        return dist.project_name in self.pkginfo_map
 
     def get_stats(self):
         ok = 0; manual = 0
