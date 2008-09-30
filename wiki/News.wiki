@@ -2,6 +2,24 @@
 
 = News of pypi2pkgsys =
 
+== September 30, 2008 ==
+
+0.1.0 is released after all packages are scanned and we can scan the new
+added packages automatically. This is a milestone in my mind. :)
+
+Full local mirror feature are finished, the PyPI can be mirrored offline in
+local machine (with modification). This feature keep me from the dirty work
+of link/download packages to unlinkable sites greatly. '--skip-logged' is
+added to scan the unlogged packages only so I shall not have to remember which
+packages are scanned already.
+
+Some bugs are fixed too.
+
+TODO:
+
+* Add the support of deb for Ubuntu.
+* Add webapp template for web applications, such as Trac.
+
 == September 13, 2008 ==
 
 There are many enhancements of pypi2pkgsys in this week. I'm tring to let it
