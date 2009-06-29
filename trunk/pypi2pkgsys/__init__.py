@@ -19,6 +19,12 @@ class pypiconfig(object):
         if os.path.isfile(os.path.join(self.etcdir, 'index.ini')):
             self.etcconfig.read(os.path.join(self.etcdir, 'index.ini'))
 
+        self.logpath = os.path.join(self.etcdir, 'pypi2pkgsys.log')
+        if not os.path.isfile(self.logpath):
+            self.logpath = os.path.join(self.sysdir, 'pypi2pkgsys.log')
+            if not os.path.isfile(self.logpath):
+                raise RuntimeError, 'pypi2pkgsys.log can not be found.'
+
     def has_section(self, secname):
         return self.etcconfig.has_section(secname) or \
             self.sysconfig.has_section(secname)

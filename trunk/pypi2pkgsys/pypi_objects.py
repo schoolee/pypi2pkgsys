@@ -12,6 +12,7 @@ import shutil
 import sys
 import urllib2
 from UserDict import UserDict
+from pypi2pkgsys import config
 from pypi2pkgsys.pypi_utils import reqstr2obj
 
 class pypibase(object):
@@ -41,8 +42,7 @@ class pypilog(pypibase):
         if self.log_path is not None:
             if not os.path.isfile(log_path):
                 if os.path.exists(log_path): os.remove(log_path)
-                shutil.copyfile(os.path.join(patchdir, 'pypi2pkgsys.log'),
-                                log_path)
+                shutil.copyfile(config.logpath, log_path)
             self.load_from_file()
 
     def check_update(self):
